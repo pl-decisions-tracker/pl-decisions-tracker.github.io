@@ -1,0 +1,39 @@
+# This is a basic workflow to help you get started with Actions
+
+name: CI
+
+# Controls when the workflow will run
+on:
+  schedule:
+  - cron: "0 22 * * *"
+  # Allows you to run this workflow manually from the Actions tab
+  workflow_dispatch:
+
+# A workflow run is made up of one or more jobs that can run sequentially or in parallel
+jobs:
+  # This workflow contains a single job called "build"
+  build:
+    # The type of runner that the job will run on
+    runs-on: ubuntu-latest
+
+    # Steps represent a sequence of tasks that will be executed as part of the job
+    steps:
+    # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
+    - uses: actions/checkout@v3
+
+    # Runs a set of commands using the runners shell
+    - name: update decisions.json
+      run: |
+        current_year=$(date +"%Y")
+        currend_date=$(date +"%Y-%m-%d")
+        curl --location --silent -H "Accept: application/json" "https://migracje.gov.pl/wp-json/udscmap/v1/decisions/poland?groupBy=institution%2CdecisionMarker%2CcaseType%2Cgender%2Cage&fields=institution%2CdecisionMarker%2CcaseType%2Cgender%2Cage%2Ctotal&orderBy=institution%2CdecisionMarker%2CcaceType%2Cage%2Cgender&year=${current_year}&country=RU" > /tmp/decisions.json
+        echo $(cat decisions.json | jq -r -c --arg today "$currend_date" --slurpfile current_json /tmp/decisions.json '. + {($today): $current_json[0]}') > decisions.json
+    - name: Commit and push changes
+      run: |-
+        git diff
+        git config user.name "Automated"
+        git config user.email "---"
+        git diff --quiet || (git add -A && git commit -m "Updated with latest")
+        git push
+          
+
