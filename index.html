@@ -70,13 +70,22 @@
     </table>
     <div id="decisionsPagination" class="paging"></div>
     <script type="module">
-      //import decisionsJson from "./decisions.json" assert { type: "json" };
-      const decisionsJson = await (await fetch("decisions.json")).json();
-      const institutions = await (await fetch("institution.json")).json();
-      const caseTypes = await (await fetch("caseType.json")).json();
-      const decisionMarkers = await (
-        await fetch("./decisionMarker.json")
-      ).json();
+      const [
+        { value: decisionsJsonFetchResult },
+        { value: institutionsFetchResult },
+        { value: caseTypesFetchResult },
+        { value: decisionMarkersFetchResult },
+      ] = await Promise.allSettled([
+        fetch("./decisions.json"),
+        fetch("./institution.json"),
+        fetch("./caseType.json"),
+        fetch("./decisionMarker.json"),
+      ]);
+      const decisionsJson = await decisionsJsonFetchResult.json();
+      const institutions = await institutionsFetchResult.json();
+      const caseTypes = await caseTypesFetchResult.json();
+      const decisionMarkers = await decisionMarkersFetchResult.json();
+
       let decisionsTable = document.getElementById("decisionsTable");
 
       let tableData = [];
