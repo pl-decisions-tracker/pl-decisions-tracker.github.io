@@ -63,9 +63,18 @@
     </table>
     <div id="statusesPagination" class="paging"></div>
     <script type="module">
-      const statusesJson = await (await fetch("./statuses.json")).json();
-      const institutions = await (await fetch("./institution.json")).json();
-      const statuses = await (await fetch("./status.json")).json();
+      const [
+        { value: statusesJsonFetchResult },
+        { value: institutionsFetchResult },
+        { value: statusesFetchResult },
+      ] = await Promise.allSettled([
+        fetch("./statuses.json"),
+        fetch("./institution.json"),
+        fetch("./status.json"),
+      ]);
+      const statusesJson = await statusesJsonFetchResult.json();
+      const institutions = await institutionsFetchResult.json();
+      const statuses = await statusesFetchResult.json();
       let statusesTable = document.getElementById("statusesTable");
 
       let tableData = [];
