@@ -13,7 +13,33 @@
     <script type="text/javascript" src="js/datatable.js"></script>
   </head>
   <body>
-    <table id="decisionsTable" class="table">
+    <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
+      <div class="container-fluid">
+        <a class="navbar-brand" href="#">Stats</a>
+        <div
+          class="navbar-collapse collapse w-100 order-1 order-md-0 dual-collapse2"
+        >
+          <ul class="navbar-nav" id="navbarNav">
+            <li class="nav-item">
+              <a class="nav-link active" aria-current="page" href="#"
+                >Decisions</a
+              >
+            </li>
+            <li class="nav-item">
+              <a class="nav-link" href="applications.html">Applications</a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link" href="statuses.html">Statuses</a>
+            </li>
+          </ul>
+        </div>
+      </div>
+    </nav>
+    <table
+      id="decisionsTable"
+      class="table"
+      aria-describedby="Table of decisions by institutions and date"
+    >
       <thead>
         <tr>
           <th>Date</th>
@@ -48,7 +74,7 @@
       var datatable = new DataTable(decisionsTable, {
         pageSize: 50,
         sort: "*",
-        filters: [true, 'select', 'select', 'select', false],
+        filters: [true, "select", "select", "select", false],
         data: tableData,
         pagingListClass: "pagination",
       });
