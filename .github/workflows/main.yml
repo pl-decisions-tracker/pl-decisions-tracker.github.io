@@ -1,6 +1,6 @@
 # This is a basic workflow to help you get started with Actions
 
-name: UPDATE decisions.json daily
+name: UPDATE json files daily
 
 # Controls when the workflow will run
 on:
@@ -41,6 +41,22 @@ jobs:
         order_by="institution"
         curl --location --silent -H "Accept: application/json" "https://migracje.gov.pl/wp-json/udscmap/v1/applications/poland?groupBy=${group_by}&fields=${fields}&orderBy=${order_by}&year=${current_year}&country=RU" > /tmp/applications.json
         echo $(cat applications.json | jq -r -c --arg today "$currend_date" --slurpfile current_json /tmp/applications.json '. + {($today): $current_json[0]}') > applications.json
+        #Totals
+        group_by="decisionMarker%2CcaseType"
+        fields="decisionMarker%2CcaseType%2Ctotal"
+        order_by="decisionMarker%2CcaseType"
+        curl --location --silent -H "Accept: application/json" "https://migracje.gov.pl/wp-json/udscmap/v1/decisions/poland?groupBy=${group_by}&fields=${fields}&orderBy=${order_by}&year=${current_year}&country=RU" > /tmp/decisionsTotal.json
+        echo $(cat decisionsTotal.json | jq -r -c --arg today "$currend_date" --slurpfile current_json /tmp/decisionsTotal.json '. + {($today): $current_json[0]}') > decisionsTotal.json
+        group_by="status"
+        fields="status%2Ctotal"
+        order_by="status"
+        curl --location --silent -H "Accept: application/json" "https://migracje.gov.pl/wp-json/udscmap/v1/statuses/poland?groupBy=${group_by}&fields=${fields}&orderBy=${order_by}&year=${current_year}&country=RU" > /tmp/statusesTotal.json
+        echo $(cat statusesTotal.json | jq -r -c --arg today "$currend_date" --slurpfile current_json /tmp/statusesTotal.json '. + {($today): $current_json[0]}') > statusesTotal.json
+        group_by="caseType"
+        fields="caseType%2Ctotal"
+        order_by="caseType"
+        curl --location --silent -H "Accept: application/json" "https://migracje.gov.pl/wp-json/udscmap/v1/applications/poland?groupBy=${group_by}&fields=${fields}&orderBy=${order_by}&year=${current_year}&country=RU" > /tmp/applicationsTotal.json
+        echo $(cat applicationsTotal.json | jq -r -c --arg today "$currend_date" --slurpfile current_json /tmp/applicationsTotal.json '. + {($today): $current_json[0]}') > applicationsTotal.json
     - name: Commit and push changes
       run: |-
         git diff
