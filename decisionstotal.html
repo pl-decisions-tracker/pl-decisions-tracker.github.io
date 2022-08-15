@@ -161,16 +161,6 @@
         }
       }
 
-      // var datatable = new DataTable(decisionsTable, {
-      //   pageSize: 50,
-      //   sort: "*",
-      //   filters: [true, "select", "select", "select", false],
-      //   data: tableData,
-      //   pagingListClass: "pagination",
-      // });
-      // patch
-      // document.querySelectorAll("#decisionsPagination > * > li").forEach( li => li.classList.add("page-item"));
-      // document.querySelectorAll("#decisionsPagination > * > li > a").forEach( a => a.classList.add("page-link"));
       $(function () {
         $("#decisionsTable").bootstrapTable({ data: tableData });
         $("#decisionsTable").on("post-body.bs.table", function () {
