@@ -38,24 +38,34 @@
         >
           <ul class="navbar-nav" id="navbarNav">
             <li class="nav-item">
-              <a class="nav-link" aria-current="page" href="/">Decisions</a>
+              <a class="nav-link" href="/">Decisions</a>
             </li>
             <li class="nav-item">
               <a class="nav-link" href="applications.html">Applications</a>
             </li>
             <li class="nav-item">
-              <a class="nav-link active" href="#">Statuses</a>
+              <a class="nav-link active" aria-current="page" href="#"
+                >Statuses</a
+              >
             </li>
             <li class="nav-item">
-              <a class="nav-link" aria-current="page" href="decisionstotal.html"
+              <a class="nav-link" href="decisionstotal.html"
                 >Decisions Totals</a
               >
+            </li>
+            <li class="nav-item">
+              <a class="nav-link" href="applicationstotal.html"
+                >Applications Totals</a
+              >
+            </li>
+            <li class="nav-item">
+              <a class="nav-link" href="statusestotal.html">Statuses Totals</a>
             </li>
           </ul>
         </div>
       </div>
     </nav>
-    <table id="statusesTable" class="table">
+    <table id="statusesTable" class="table" aria-describedby="Table of statuses by institutions and date">
       <thead>
         <tr>
           <th>Date</th>

@@ -48,7 +48,7 @@
               <a class="nav-link" href="statuses.html">Statuses</a>
             </li>
             <li class="nav-item">
-              <a class="nav-link active" aria-current="page" href="#"
+              <a class="nav-link" href="decisionstotal.html"
                 >Decisions Totals</a
               >
             </li>
@@ -58,33 +58,31 @@
               >
             </li>
             <li class="nav-item">
-              <a class="nav-link" href="statusestotal.html">Statuses Totals</a>
+              <a class="nav-link active" aria-current="page" href="#"
+                >Statuses Totals</a
+              >
             </li>
           </ul>
         </div>
       </div>
     </nav>
     <table
-      id="decisionsTable"
+      id="statusesTable"
       class="table"
       data-filter-control="true"
-      aria-describedby="Table of decisions by date"
+      aria-describedby="Table of statuses by date"
     >
       <thead>
         <tr>
           <th data-field="day" data-filter-control="input">Date</th>
-          <th data-field="caseType" data-filter-control="select">Case Type</th>
-          <th data-field="decisionMarker" data-filter-control="select">
-            Decision
-          </th>
+          <th data-field="status" data-filter-control="select">Status</th>
           <th data-field="subTotal">Total</th>
-          <th data-field="total">Sum by Type</th>
           <th data-field="grandTotal">Sum by Date</th>
         </tr>
       </thead>
       <tbody></tbody>
     </table>
-    <div id="decisionsPagination" class="paging"></div>
+    <div id="statusesPagination" class="paging"></div>
     <script src="https://cdn.jsdelivr.net/npm/jquery/dist/jquery.min.js"></script>
     <script
       src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.0/dist/js/bootstrap.bundle.min.js"
@@ -94,106 +92,49 @@
     <script src="https://unpkg.com/bootstrap-table@1.20.2/dist/bootstrap-table.min.js"></script>
     <script src="https://unpkg.com/bootstrap-table@1.20.2/dist/extensions/filter-control/bootstrap-table-filter-control.min.js"></script>
     <script type="module">
-      const [
-        { value: decisionsJsonFetchResult },
-        { value: caseTypesFetchResult },
-        { value: decisionMarkersFetchResult },
-      ] = await Promise.allSettled([
-        fetch("./decisionsTotal.json"),
-        fetch("./caseType.json"),
-        fetch("./decisionMarker.json"),
-      ]);
-      const decisionsJson = await decisionsJsonFetchResult.json();
-      const caseTypes = await caseTypesFetchResult.json();
-      const decisionMarkers = await decisionMarkersFetchResult.json();
+      const [{ value: statusesJsonFetchResult }, { value: statusFetchResult }] =
+        await Promise.allSettled([
+          fetch("./statusesTotal.json"),
+          fetch("./status.json"),
+        ]);
+      const statusesJson = await statusesJsonFetchResult.json();
+      const status = await statusFetchResult.json();
 
-      let decisionsTable = document.getElementById("decisionsTable");
+      let statusesTable = document.getElementById("statusesTable");
 
       let tableData = [];
-      for (const day of Object.keys(decisionsJson)) {
+      for (const day of Object.keys(statusesJson)) {
         let firstElement;
         let firstDateOccurance = true;
-        let currentCaseTypeElement;
-        decisionsJson[day].sort((a, b) => {
-          return (
-            parseInt(a.caseType) - parseInt(b.caseType) ||
-            parseInt(a.decisionMarker) - parseInt(b.decisionMarker)
-          );
+        statusesJson[day].sort((a, b) => {
+          return parseInt(a.status) - parseInt(b.status);
         });
-        for (const rec of decisionsJson[day]) {
-          const caset = caseTypes.find((ct) => ct.id == rec.caseType).type;
-          const decm = decisionMarkers.find(
-            (dm) => dm.id == rec.decisionMarker
-          ).description;
+        for (const rec of statusesJson[day]) {
+          const st = status.find((ct) => ct.id == rec.status).status;
           if (firstDateOccurance) {
             firstElement = {
               day: day,
-              caseType: caset,
-              decisionMarker: decm,
+              status: st,
               subTotal: rec.total,
-              total: rec.total,
               grandTotal: rec.total,
             };
-            currentCaseTypeElement = firstElement;
             tableData.push(firstElement);
             firstDateOccurance = false;
           } else {
             firstElement.grandTotal += rec.total;
-            if (currentCaseTypeElement.caseType === caset) {
-              currentCaseTypeElement.total += rec.total;
-              tableData.push({
-                day: day,
-                caseType: caset,
-                decisionMarker: decm,
-                subTotal: rec.total,
-              });
-            } else {
-              currentCaseTypeElement = {
-                day: day,
-                caseType: caset,
-                decisionMarker: decm,
-                subTotal: rec.total,
-                total: rec.total,
-              };
-              tableData.push(currentCaseTypeElement);
-            }
+            tableData.push({
+              day: day,
+              status: st,
+              subTotal: rec.total,
+            });
           }
         }
       }
 
-      // var datatable = new DataTable(decisionsTable, {
-      //   pageSize: 50,
-      //   sort: "*",
-      //   filters: [true, "select", "select", "select", false],
-      //   data: tableData,
-      //   pagingListClass: "pagination",
-      // });
-      // patch
-      // document.querySelectorAll("#decisionsPagination > * > li").forEach( li => li.classList.add("page-item"));
-      // document.querySelectorAll("#decisionsPagination > * > li > a").forEach( a => a.classList.add("page-link"));
       $(function () {
-        $("#decisionsTable").bootstrapTable({ data: tableData });
-        $("#decisionsTable").on("post-body.bs.table", function () {
-          const localData = $("#decisionsTable").bootstrapTable("getData");
-          for (let index = 0; index < localData.length; index++) {
-            const element = localData[index];
-            if (element.hasOwnProperty("total")) {
-              let rowSpan = 1;
-              while (
-                index + rowSpan < localData.length &&
-                !localData[index + rowSpan].hasOwnProperty("total")
-              ) {
-                rowSpan++;
-              }
-              if (rowSpan !== 1) {
-                $("#decisionsTable").bootstrapTable("mergeCells", {
-                  index: index,
-                  field: "total",
-                  rowspan: rowSpan,
-                });
-              }
-            }
-          }
+        $("#statusesTable").bootstrapTable({ data: tableData });
+        $("#statusesTable").on("post-body.bs.table", function () {
+          const localData = $("#statusesTable").bootstrapTable("getData");
 
           for (let index = 0; index < localData.length; index++) {
             const element = localData[index];
@@ -206,7 +147,7 @@
                 rowSpan++;
               }
               if (rowSpan !== 1) {
-                $("#decisionsTable").bootstrapTable("mergeCells", {
+                $("#statusesTable").bootstrapTable("mergeCells", {
                   index: index,
                   field: "grandTotal",
                   rowspan: rowSpan,
