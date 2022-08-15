@@ -77,6 +77,7 @@
           <th data-field="day" data-filter-control="input">Date</th>
           <th data-field="status" data-filter-control="select">Status</th>
           <th data-field="subTotal">Total</th>
+          <th data-field="subTotalPercent">Percent from Date Sum</th>
           <th data-field="grandTotal">Sum by Date</th>
         </tr>
       </thead>
@@ -104,28 +105,39 @@
 
       let tableData = [];
       for (const day of Object.keys(statusesJson)) {
-        let firstElement;
+        // let firstElement;
         let firstDateOccurance = true;
+        let dateSum = 0;
         statusesJson[day].sort((a, b) => {
           return parseInt(a.status) - parseInt(b.status);
+        });
+        statusesJson[day].forEach((el) => {
+          dateSum += el.total;
         });
         for (const rec of statusesJson[day]) {
           const st = status.find((ct) => ct.id == rec.status).status;
           if (firstDateOccurance) {
-            firstElement = {
-              day: day,
-              status: st,
-              subTotal: rec.total,
-              grandTotal: rec.total,
-            };
-            tableData.push(firstElement);
-            firstDateOccurance = false;
-          } else {
-            firstElement.grandTotal += rec.total;
+            // firstElement = {
+            //   day: day,
+            //   status: st,
+            //   subTotal: rec.total,
+            //   grandTotal: rec.total,
+            // };
             tableData.push({
               day: day,
               status: st,
               subTotal: rec.total,
+              subTotalPercent: `${Math.round( rec.total / dateSum * 100)}%`,
+              grandTotal: dateSum,
+            });
+            firstDateOccurance = false;
+          } else {
+            // firstElement.grandTotal += rec.total;
+            tableData.push({
+              day: day,
+              status: st,
+              subTotal: rec.total,
+              subTotalPercent: `${Math.round( rec.total / dateSum * 100)}%`,
             });
           }
         }
@@ -150,6 +162,11 @@
                 $("#statusesTable").bootstrapTable("mergeCells", {
                   index: index,
                   field: "grandTotal",
+                  rowspan: rowSpan,
+                });
+                $("#statusesTable").bootstrapTable("mergeCells", {
+                  index: index,
+                  field: "day",
                   rowspan: rowSpan,
                 });
               }

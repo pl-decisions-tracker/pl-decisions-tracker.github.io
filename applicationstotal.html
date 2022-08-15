@@ -75,6 +75,7 @@
           <th data-field="day" data-filter-control="input">Date</th>
           <th data-field="caseType" data-filter-control="select">Case Type</th>
           <th data-field="subTotal">Total</th>
+          <th data-field="subTotalPercent">Percent from Date Sum</th>
           <th data-field="grandTotal">Sum by Date</th>
         </tr>
       </thead>
@@ -104,28 +105,31 @@
 
       let tableData = [];
       for (const day of Object.keys(applicationsJson)) {
-        let firstElement;
         let firstDateOccurance = true;
+        let dateSum = 0;
         applicationsJson[day].sort((a, b) => {
           return parseInt(a.caseType) - parseInt(b.caseType);
+        });
+        applicationsJson[day].forEach((el) => {
+          dateSum += el.total;
         });
         for (const rec of applicationsJson[day]) {
           const caset = caseTypes.find((ct) => ct.id == rec.caseType).type;
           if (firstDateOccurance) {
-            firstElement = {
-              day: day,
-              caseType: caset,
-              subTotal: rec.total,
-              grandTotal: rec.total,
-            };
-            tableData.push(firstElement);
-            firstDateOccurance = false;
-          } else {
-            firstElement.grandTotal += rec.total;
             tableData.push({
               day: day,
               caseType: caset,
               subTotal: rec.total,
+              subTotalPercent: `${Math.round( rec.total / dateSum * 100)}%`,
+              grandTotal: dateSum,
+            });
+            firstDateOccurance = false;
+          } else {
+            tableData.push({
+              day: day,
+              caseType: caset,
+              subTotal: rec.total,
+              subTotalPercent: `${Math.round( rec.total / dateSum * 100)}%`,
             });
           }
         }
@@ -150,6 +154,11 @@
                 $("#applicationsTable").bootstrapTable("mergeCells", {
                   index: index,
                   field: "grandTotal",
+                  rowspan: rowSpan,
+                });
+                $("#applicationsTable").bootstrapTable("mergeCells", {
+                  index: index,
+                  field: "day",
                   rowspan: rowSpan,
                 });
               }
