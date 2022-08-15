@@ -78,7 +78,9 @@
             Decision
           </th>
           <th data-field="subTotal">Total</th>
+          <th data-field="subTotalPercent">Percent from Type Sum</th>
           <th data-field="total">Sum by Type</th>
+          <th data-field="totalPercent">Percent from Date Sum</th>
           <th data-field="grandTotal">Sum by Date</th>
         </tr>
       </thead>
@@ -111,14 +113,26 @@
 
       let tableData = [];
       for (const day of Object.keys(decisionsJson)) {
-        let firstElement;
         let firstDateOccurance = true;
-        let currentCaseTypeElement;
+        let currentCaseType;
+        let sumByCaseType = new Map();
+        let dateSum = 0;
         decisionsJson[day].sort((a, b) => {
           return (
             parseInt(a.caseType) - parseInt(b.caseType) ||
             parseInt(a.decisionMarker) - parseInt(b.decisionMarker)
           );
+        });
+        decisionsJson[day].forEach((el) => {
+          if (sumByCaseType.has(el.caseType)) {
+            sumByCaseType.set(
+              el.caseType,
+              sumByCaseType.get(el.caseType) + el.total
+            );
+          } else {
+            sumByCaseType.set(el.caseType, el.total);
+          }
+          dateSum += el.total;
         });
         for (const rec of decisionsJson[day]) {
           const caset = caseTypes.find((ct) => ct.id == rec.caseType).type;
@@ -126,36 +140,38 @@
             (dm) => dm.id == rec.decisionMarker
           ).description;
           if (firstDateOccurance) {
-            firstElement = {
+            tableData.push({
               day: day,
               caseType: caset,
               decisionMarker: decm,
               subTotal: rec.total,
+              subTotalPercent: `${Math.round( rec.total / sumByCaseType.get(rec.caseType) * 100)}%`,
               total: rec.total,
-              grandTotal: rec.total,
-            };
-            currentCaseTypeElement = firstElement;
-            tableData.push(firstElement);
+              totalPercent: `${Math.round( sumByCaseType.get(rec.caseType) / dateSum * 100)}%`,
+              grandTotal: dateSum,
+            });
             firstDateOccurance = false;
+            currentCaseType = rec.caseType;
           } else {
-            firstElement.grandTotal += rec.total;
-            if (currentCaseTypeElement.caseType === caset) {
-              currentCaseTypeElement.total += rec.total;
+            if (currentCaseType === rec.caseType) {
               tableData.push({
                 day: day,
                 caseType: caset,
                 decisionMarker: decm,
                 subTotal: rec.total,
+                subTotalPercent: `${Math.round( rec.total / sumByCaseType.get(rec.caseType) * 100)}%`,
               });
             } else {
-              currentCaseTypeElement = {
+              currentCaseType = rec.caseType;
+              tableData.push({
                 day: day,
                 caseType: caset,
                 decisionMarker: decm,
                 subTotal: rec.total,
+                subTotalPercent: `${Math.round( rec.total / sumByCaseType.get(rec.caseType) * 100)}%`,
                 total: rec.total,
-              };
-              tableData.push(currentCaseTypeElement);
+                totalPercent: `${Math.round( sumByCaseType.get(rec.caseType) / dateSum * 100)}%`,
+              });
             }
           }
         }
@@ -181,6 +197,16 @@
                   field: "total",
                   rowspan: rowSpan,
                 });
+                $("#decisionsTable").bootstrapTable("mergeCells", {
+                  index: index,
+                  field: "totalPercent",
+                  rowspan: rowSpan,
+                });
+                $("#decisionsTable").bootstrapTable("mergeCells", {
+                  index: index,
+                  field: "caseType",
+                  rowspan: rowSpan,
+                });
               }
             }
           }
@@ -199,6 +225,11 @@
                 $("#decisionsTable").bootstrapTable("mergeCells", {
                   index: index,
                   field: "grandTotal",
+                  rowspan: rowSpan,
+                });
+                $("#decisionsTable").bootstrapTable("mergeCells", {
+                  index: index,
+                  field: "day",
                   rowspan: rowSpan,
                 });
               }
