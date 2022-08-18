@@ -8,7 +8,11 @@ on:
 
 # A workflow run is made up of one or more jobs that can run sequentially or in parallel
 jobs:
-  call-workflow-passing-data:
+  get-by:
+    uses: zubrabubra/pl-decisions-tracker.github.io/.github/workflows/country_data.yml@main
+    with:
+      country: 'BY'
+  get-ru:
     uses: zubrabubra/pl-decisions-tracker.github.io/.github/workflows/country_data.yml@main
     with:
       country: 'RU'
