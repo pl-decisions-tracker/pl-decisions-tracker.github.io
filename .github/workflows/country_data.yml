@@ -1,0 +1,58 @@
+on:
+  workflow_call:
+    inputs:
+      country:
+        required: false
+        type: string
+        default: 'UK'
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v3
+    - name: update json files
+      run: |
+        country_=${{country}}
+        current_year=$(date +"%Y")
+        currend_date=$(date +"%Y-%m-%d")
+        group_by="institution%2CdecisionMarker%2CcaseType"
+        fields="institution%2CdecisionMarker%2CcaseType%2Ctotal"
+        order_by="institution%2CdecisionMarker%2CcaseType"
+        url_base="https://migracje.gov.pl/wp-json/udscmap/v1"
+        curl --location --silent -H "Accept: application/json" "${url_base}/decisions/poland?groupBy=${group_by}&fields=${fields}&orderBy=${order_by}&year=${current_year}&country=${country_}" > /tmp/decisions.json
+        echo $(cat decisions_${country_}.json | jq -r -c --arg today "$currend_date" --slurpfile current_json /tmp/decisions.json '. + {($today): $current_json[0]}') > decisions_${country_}.json
+        group_by="institution%2Cstatus"
+        fields="institution%2Cstatus%2Ctotal"
+        order_by="institution"
+        curl --location --silent -H "Accept: application/json" "${url_base}/statuses/poland?groupBy=${group_by}&fields=${fields}&orderBy=${order_by}&year=${current_year}&country=${country_}" > /tmp/statuses.json
+        echo $(cat statuses_${country_}.json | jq -r -c --arg today "$currend_date" --slurpfile current_json /tmp/statuses.json '. + {($today): $current_json[0]}') > statuses_${country_}.json
+        group_by="institution%2CcaseType"
+        fields="institution%2CcaseType%2Ctotal"
+        order_by="institution"
+        curl --location --silent -H "Accept: application/json" "${url_base}/applications/poland?groupBy=${group_by}&fields=${fields}&orderBy=${order_by}&year=${current_year}&country=${country_}" > /tmp/applications.json
+        echo $(cat applications_${country_}.json | jq -r -c --arg today "$currend_date" --slurpfile current_json /tmp/applications.json '. + {($today): $current_json[0]}') > applications_${country_}.json
+        #Totals
+        group_by="decisionMarker%2CcaseType"
+        fields="decisionMarker%2CcaseType%2Ctotal"
+        order_by="decisionMarker%2CcaseType"
+        curl --location --silent -H "Accept: application/json" "${url_base}/decisions/poland?groupBy=${group_by}&fields=${fields}&orderBy=${order_by}&year=${current_year}&country=${country_}" > /tmp/decisionsTotal.json
+        echo $(cat decisionsTotal_${country_}.json | jq -r -c --arg today "$currend_date" --slurpfile current_json /tmp/decisionsTotal.json '. + {($today): $current_json[0]}') > decisionsTotal_${country_}.json
+        group_by="status"
+        fields="status%2Ctotal"
+        order_by="status"
+        curl --location --silent -H "Accept: application/json" "${url_base}/statuses/poland?groupBy=${group_by}&fields=${fields}&orderBy=${order_by}&year=${current_year}&country=${country_}" > /tmp/statusesTotal.json
+        echo $(cat statusesTotal_${country_}.json | jq -r -c --arg today "$currend_date" --slurpfile current_json /tmp/statusesTotal.json '. + {($today): $current_json[0]}') > statusesTotal_${country_}.json
+        group_by="caseType"
+        fields="caseType%2Ctotal"
+        order_by="caseType"
+        curl --location --silent -H "Accept: application/json" "${url_base}/applications/poland?groupBy=${group_by}&fields=${fields}&orderBy=${order_by}&year=${current_year}&country=${country_}" > /tmp/applicationsTotal.json
+        echo $(cat applicationsTotal_${country_}.json | jq -r -c --arg today "$currend_date" --slurpfile current_json /tmp/applicationsTotal.json '. + {($today): $current_json[0]}') > applicationsTotal_${country_}.json
+    - name: Commit and push changes
+      run: |-
+        git diff
+        git config user.name "Automated"
+        git config user.email "---"
+        git diff --quiet || (git add -A && git commit -m "Updated with latest")
+        git push
+
