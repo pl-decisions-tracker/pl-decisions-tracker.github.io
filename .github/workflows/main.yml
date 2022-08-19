@@ -4,6 +4,8 @@ name: UPDATE json files daily
 
 # Controls when the workflow will run
 on:
+  schedule:
+  - cron: "30 21 * * *"
   workflow_dispatch:
 
 # A workflow run is made up of one or more jobs that can run sequentially or in parallel
