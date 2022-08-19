@@ -13,6 +13,7 @@ jobs:
     with:
       country: 'BY'
   get-ru:
+    needs: get-by
     uses: zubrabubra/pl-decisions-tracker.github.io/.github/workflows/country_data.yml@main
     with:
       country: 'RU'
