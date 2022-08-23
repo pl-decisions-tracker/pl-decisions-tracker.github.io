@@ -2,6 +2,10 @@
 <html lang="en">
   <head>
     <title>Daily stats from USC</title>
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1, shrink-to-fit=no"
+    />
     <!-- CSS only -->
     <link
       href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.0/dist/css/bootstrap.min.css"
@@ -19,74 +23,81 @@
     />
   </head>
   <body>
-    <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
-      <div class="container-fluid">
-        <button
-          class="navbar-toggler"
-          type="button"
-          data-bs-toggle="collapse"
-          data-bs-target="#navbarNavAltMarkup"
-          aria-controls="navbarNavAltMarkup"
-          aria-expanded="false"
-          aria-label="Toggle navigation"
-        >
-          <span class="navbar-toggler-icon"></span>
-        </button>
-        <a class="navbar-brand" href="#">Stats</a>
-        <div
-          class="navbar-collapse collapse w-100 order-1 order-md-0 dual-collapse2"
-          id="navbarNavAltMarkup"
-        >
-          <ul class="navbar-nav" id="navbarNav">
-            <li class="nav-item">
-              <a class="nav-link" href="/">Decisions</a>
-            </li>
-            <li class="nav-item">
-              <a class="nav-link" href="applications.html">Applications</a>
-            </li>
-            <li class="nav-item">
-              <a class="nav-link" href="statuses.html">Statuses</a>
-            </li>
-            <li class="nav-item">
-              <a class="nav-link active" aria-current="page" href="#"
-                >Decisions Totals</a
-              >
-            </li>
-            <li class="nav-item">
-              <a class="nav-link" href="applicationstotal.html"
-                >Applications Totals</a
-              >
-            </li>
-            <li class="nav-item">
-              <a class="nav-link" href="statusestotal.html">Statuses Totals</a>
-            </li>
-          </ul>
+    <div class="container">
+      <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
+        <div class="container-fluid">
+          <button
+            class="navbar-toggler"
+            type="button"
+            data-bs-toggle="collapse"
+            data-bs-target="#navbarNavAltMarkup"
+            aria-controls="navbarNavAltMarkup"
+            aria-expanded="false"
+            aria-label="Toggle navigation"
+          >
+            <span class="navbar-toggler-icon"></span>
+          </button>
+          <a class="navbar-brand" href="#">Stats</a>
+          <div
+            class="navbar-collapse collapse w-100 order-1 order-md-0 dual-collapse2"
+            id="navbarNavAltMarkup"
+          >
+            <ul class="navbar-nav" id="navbarNav">
+              <li class="nav-item">
+                <a class="nav-link" href="/">Decisions</a>
+              </li>
+              <li class="nav-item">
+                <a class="nav-link" href="applications.html">Applications</a>
+              </li>
+              <li class="nav-item">
+                <a class="nav-link" href="statuses.html">Statuses</a>
+              </li>
+              <li class="nav-item">
+                <a class="nav-link active" aria-current="page" href="#"
+                  >Decisions Totals</a
+                >
+              </li>
+              <li class="nav-item">
+                <a class="nav-link" href="applicationstotal.html"
+                  >Applications Totals</a
+                >
+              </li>
+              <li class="nav-item">
+                <a class="nav-link" href="statusestotal.html"
+                  >Statuses Totals</a
+                >
+              </li>
+            </ul>
+          </div>
         </div>
-      </div>
-    </nav>
-    <table
-      id="decisionsTable"
-      class="table"
-      data-filter-control="true"
-      aria-describedby="Table of decisions by date"
-    >
-      <thead>
-        <tr>
-          <th data-field="day" data-filter-control="input">Date</th>
-          <th data-field="caseType" data-filter-control="select">Case Type</th>
-          <th data-field="decisionMarker" data-filter-control="select">
-            Decision
-          </th>
-          <th data-field="subTotal">Total</th>
-          <th data-field="subTotalPercent">Percent from Type Sum</th>
-          <th data-field="total">Sum by Type</th>
-          <th data-field="totalPercent">Percent from Date Sum</th>
-          <th data-field="grandTotal">Sum by Date</th>
-        </tr>
-      </thead>
-      <tbody></tbody>
-    </table>
-    <div id="decisionsPagination" class="paging"></div>
+      </nav>
+      <table
+        id="decisionsTable"
+        class="table"
+        data-pagination="true"
+        data-page-size="25"
+        data-filter-control="true"
+        aria-describedby="Table of decisions by date"
+      >
+        <thead>
+          <tr>
+            <th data-field="day" data-filter-control="input">Date</th>
+            <th data-field="caseType" data-filter-control="select">
+              Case Type
+            </th>
+            <th data-field="decisionMarker" data-filter-control="select">
+              Decision
+            </th>
+            <th data-field="subTotal">Total</th>
+            <th data-field="subTotalPercent">Percent from Type Sum</th>
+            <th data-field="total">Sum by Type</th>
+            <th data-field="totalPercent">Percent from Date Sum</th>
+            <th data-field="grandTotal">Sum by Date</th>
+          </tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+    </div>
     <script src="https://cdn.jsdelivr.net/npm/jquery/dist/jquery.min.js"></script>
     <script
       src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.0/dist/js/bootstrap.bundle.min.js"
@@ -96,6 +107,13 @@
     <script src="https://unpkg.com/bootstrap-table@1.20.2/dist/bootstrap-table.min.js"></script>
     <script src="https://unpkg.com/bootstrap-table@1.20.2/dist/extensions/filter-control/bootstrap-table-filter-control.min.js"></script>
     <script type="module">
+      function rowStyle(row, index) {
+        return {
+          css: {
+            "word-break": "break-word",
+          },
+        };
+      }
       const [
         { value: decisionsJsonFetchResult },
         { value: caseTypesFetchResult },
@@ -113,8 +131,6 @@
 
       let tableData = [];
       for (const day of Object.keys(decisionsJson)) {
-        let firstDateOccurance = true;
-        let currentCaseType;
         let sumByCaseType = new Map();
         let dateSum = 0;
         decisionsJson[day].sort((a, b) => {
@@ -139,100 +155,127 @@
           const decm = decisionMarkers.find(
             (dm) => dm.id == rec.decisionMarker
           ).description;
-          if (firstDateOccurance) {
-            tableData.push({
-              day: day,
-              caseType: caset,
-              decisionMarker: decm,
-              subTotal: rec.total,
-              subTotalPercent: `${Math.round( rec.total / sumByCaseType.get(rec.caseType) * 100)}%`,
-              total: rec.total,
-              totalPercent: `${Math.round( sumByCaseType.get(rec.caseType) / dateSum * 100)}%`,
-              grandTotal: dateSum,
-            });
-            firstDateOccurance = false;
-            currentCaseType = rec.caseType;
-          } else {
-            if (currentCaseType === rec.caseType) {
-              tableData.push({
-                day: day,
-                caseType: caset,
-                decisionMarker: decm,
-                subTotal: rec.total,
-                subTotalPercent: `${Math.round( rec.total / sumByCaseType.get(rec.caseType) * 100)}%`,
-              });
-            } else {
-              currentCaseType = rec.caseType;
-              tableData.push({
-                day: day,
-                caseType: caset,
-                decisionMarker: decm,
-                subTotal: rec.total,
-                subTotalPercent: `${Math.round( rec.total / sumByCaseType.get(rec.caseType) * 100)}%`,
-                total: rec.total,
-                totalPercent: `${Math.round( sumByCaseType.get(rec.caseType) / dateSum * 100)}%`,
-              });
-            }
-          }
+          tableData.push({
+            day: day,
+            caseType: caset,
+            decisionMarker: decm,
+            subTotal: rec.total,
+            subTotalPercent: `${Math.round(
+              (rec.total / sumByCaseType.get(rec.caseType)) * 100
+            )}%`,
+            total: sumByCaseType.get(rec.caseType),
+            totalPercent: `${Math.round(
+              (sumByCaseType.get(rec.caseType) / dateSum) * 100
+            )}%`,
+            grandTotal: dateSum,
+          });
         }
       }
 
       $(function () {
-        $("#decisionsTable").bootstrapTable({ data: tableData });
+        $("#decisionsTable").bootstrapTable({
+          data: tableData,
+          rowStyle: rowStyle,
+        });
         $("#decisionsTable").on("post-body.bs.table", function () {
-          const localData = $("#decisionsTable").bootstrapTable("getData");
+          const localData = $("#decisionsTable").bootstrapTable("getData", {
+            useCurrentPage: true,
+          });
+          let currentDateIndex = 0;
+          let currentCaseTypeIndex = 0;
           for (let index = 0; index < localData.length; index++) {
             const element = localData[index];
-            if (element.hasOwnProperty("total")) {
-              let rowSpan = 1;
-              while (
-                index + rowSpan < localData.length &&
-                !localData[index + rowSpan].hasOwnProperty("total")
-              ) {
-                rowSpan++;
-              }
-              if (rowSpan !== 1) {
-                $("#decisionsTable").bootstrapTable("mergeCells", {
-                  index: index,
-                  field: "total",
-                  rowspan: rowSpan,
-                });
-                $("#decisionsTable").bootstrapTable("mergeCells", {
-                  index: index,
-                  field: "totalPercent",
-                  rowspan: rowSpan,
-                });
-                $("#decisionsTable").bootstrapTable("mergeCells", {
-                  index: index,
-                  field: "caseType",
-                  rowspan: rowSpan,
-                });
+            if (index === localData.length - 1) {
+              if (element.day === localData[currentDateIndex].day) {
+                let dateSpan = index - currentDateIndex + 1;
+                if (dateSpan > 1) {
+                  $("#decisionsTable").bootstrapTable("mergeCells", {
+                    index: currentDateIndex,
+                    field: "day",
+                    rowspan: dateSpan,
+                  });
+                  $("#decisionsTable").bootstrapTable("mergeCells", {
+                    index: currentDateIndex,
+                    field: "grandTotal",
+                    rowspan: dateSpan,
+                  });
+                }
+                if (
+                  element.caseType === localData[currentCaseTypeIndex].caseType
+                ) {
+                  let caseTypeSpan = index - currentCaseTypeIndex + 1;
+                  if (caseTypeSpan > 1) {
+                    $("#decisionsTable").bootstrapTable("mergeCells", {
+                      index: currentCaseTypeIndex,
+                      field: "caseType",
+                      rowspan: caseTypeSpan,
+                    });
+                    $("#decisionsTable").bootstrapTable("mergeCells", {
+                      index: currentCaseTypeIndex,
+                      field: "total",
+                      rowspan: caseTypeSpan,
+                    });
+                    $("#decisionsTable").bootstrapTable("mergeCells", {
+                      index: currentCaseTypeIndex,
+                      field: "totalPercent",
+                      rowspan: caseTypeSpan,
+                    });
+                  }
+                }
               }
             }
-          }
-
-          for (let index = 0; index < localData.length; index++) {
-            const element = localData[index];
-            if (element.hasOwnProperty("grandTotal")) {
-              let rowSpan = 1;
-              while (
-                index + rowSpan < localData.length &&
-                !localData[index + rowSpan].hasOwnProperty("grandTotal")
-              ) {
-                rowSpan++;
-              }
-              if (rowSpan !== 1) {
+            if (element.day !== localData[currentDateIndex].day) {
+              if (index - currentDateIndex > 1) {
                 $("#decisionsTable").bootstrapTable("mergeCells", {
-                  index: index,
-                  field: "grandTotal",
-                  rowspan: rowSpan,
-                });
-                $("#decisionsTable").bootstrapTable("mergeCells", {
-                  index: index,
+                  index: currentDateIndex,
                   field: "day",
-                  rowspan: rowSpan,
+                  rowspan: index - currentDateIndex,
+                });
+                $("#decisionsTable").bootstrapTable("mergeCells", {
+                  index: currentDateIndex,
+                  field: "grandTotal",
+                  rowspan: index - currentDateIndex,
                 });
               }
+              if (index - currentCaseTypeIndex > 1) {
+                $("#decisionsTable").bootstrapTable("mergeCells", {
+                  index: currentCaseTypeIndex,
+                  field: "caseType",
+                  rowspan: index - currentCaseTypeIndex,
+                });
+                $("#decisionsTable").bootstrapTable("mergeCells", {
+                  index: currentCaseTypeIndex,
+                  field: "total",
+                  rowspan: index - currentCaseTypeIndex,
+                });
+                $("#decisionsTable").bootstrapTable("mergeCells", {
+                  index: currentCaseTypeIndex,
+                  field: "totalPercent",
+                  rowspan: index - currentCaseTypeIndex,
+                });
+              }
+              currentCaseTypeIndex = index;
+              currentDateIndex = index;
+            }
+            if (element.caseType !== localData[currentCaseTypeIndex].caseType) {
+              if (index - currentCaseTypeIndex > 1) {
+                $("#decisionsTable").bootstrapTable("mergeCells", {
+                  index: currentCaseTypeIndex,
+                  field: "caseType",
+                  rowspan: index - currentCaseTypeIndex,
+                });
+                $("#decisionsTable").bootstrapTable("mergeCells", {
+                  index: currentCaseTypeIndex,
+                  field: "total",
+                  rowspan: index - currentCaseTypeIndex,
+                });
+                $("#decisionsTable").bootstrapTable("mergeCells", {
+                  index: currentCaseTypeIndex,
+                  field: "totalPercent",
+                  rowspan: index - currentCaseTypeIndex,
+                });
+              }
+              currentCaseTypeIndex = index;
             }
           }
         });
