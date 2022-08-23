@@ -2,6 +2,10 @@
 <html lang="en">
   <head>
     <title>Daily stats from USC</title>
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1, shrink-to-fit=no"
+    />
     <!-- CSS only -->
     <link
       href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.0/dist/css/bootstrap.min.css"
@@ -19,69 +23,76 @@
     />
   </head>
   <body>
-    <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
-      <div class="container-fluid">
-        <button
-          class="navbar-toggler"
-          type="button"
-          data-bs-toggle="collapse"
-          data-bs-target="#navbarNavAltMarkup"
-          aria-controls="navbarNavAltMarkup"
-          aria-expanded="false"
-          aria-label="Toggle navigation"
-        >
-          <span class="navbar-toggler-icon"></span>
-        </button>
-        <a class="navbar-brand" href="#">Stats</a>
-        <div
-          class="navbar-collapse collapse w-100 order-1 order-md-0 dual-collapse2"
-          id="navbarNavAltMarkup"
-        >
-          <ul class="navbar-nav" id="navbarNav">
-            <li class="nav-item">
-              <a class="nav-link" aria-current="page" href="/">Decisions</a>
-            </li>
-            <li class="nav-item">
-              <a class="nav-link" href="applications.html">Applications</a>
-            </li>
-            <li class="nav-item">
-              <a class="nav-link" href="statuses.html">Statuses</a>
-            </li>
-            <li class="nav-item">
-              <a class="nav-link" href="decisionstotal.html"
-                >Decisions Totals</a
-              >
-            </li>
-            <li class="nav-item">
-              <a class="nav-link active" aria-current="page" href="#"
-                >Applications Totals</a
-              >
-            </li>
-            <li class="nav-item">
-              <a class="nav-link" href="statusestotal.html">Statuses Totals</a>
-            </li>
-          </ul>
+    <div class="container">
+      <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
+        <div class="container-fluid">
+          <button
+            class="navbar-toggler"
+            type="button"
+            data-bs-toggle="collapse"
+            data-bs-target="#navbarNavAltMarkup"
+            aria-controls="navbarNavAltMarkup"
+            aria-expanded="false"
+            aria-label="Toggle navigation"
+          >
+            <span class="navbar-toggler-icon"></span>
+          </button>
+          <a class="navbar-brand" href="#">Stats</a>
+          <div
+            class="navbar-collapse collapse w-100 order-1 order-md-0 dual-collapse2"
+            id="navbarNavAltMarkup"
+          >
+            <ul class="navbar-nav" id="navbarNav">
+              <li class="nav-item">
+                <a class="nav-link" aria-current="page" href="/">Decisions</a>
+              </li>
+              <li class="nav-item">
+                <a class="nav-link" href="applications.html">Applications</a>
+              </li>
+              <li class="nav-item">
+                <a class="nav-link" href="statuses.html">Statuses</a>
+              </li>
+              <li class="nav-item">
+                <a class="nav-link" href="decisionstotal.html"
+                  >Decisions Totals</a
+                >
+              </li>
+              <li class="nav-item">
+                <a class="nav-link active" aria-current="page" href="#"
+                  >Applications Totals</a
+                >
+              </li>
+              <li class="nav-item">
+                <a class="nav-link" href="statusestotal.html"
+                  >Statuses Totals</a
+                >
+              </li>
+            </ul>
+          </div>
         </div>
-      </div>
-    </nav>
-    <table
-      id="applicationsTable"
-      class="table"
-      data-filter-control="true"
-      aria-describedby="Table of applications by date"
-    >
-      <thead>
-        <tr>
-          <th data-field="day" data-filter-control="input">Date</th>
-          <th data-field="caseType" data-filter-control="select">Case Type</th>
-          <th data-field="subTotal">Total</th>
-          <th data-field="subTotalPercent">Percent from Date Sum</th>
-          <th data-field="grandTotal">Sum by Date</th>
-        </tr>
-      </thead>
-      <tbody></tbody>
-    </table>
-    <div id="applicationsPagination" class="paging"></div>
+      </nav>
+      <table
+        id="applicationsTable"
+        class="table"
+        data-pagination="true"
+        data-page-size="25"
+        data-filter-control="true"
+        aria-describedby="Table of applications by date"
+      >
+        <thead>
+          <tr>
+            <th data-field="day" data-filter-control="input">Date</th>
+            <th data-field="caseType" data-filter-control="select">
+              Case Type
+            </th>
+            <th data-field="subTotal">Total</th>
+            <th data-field="subTotalPercent">Percent from Date Sum</th>
+            <th data-field="grandTotal">Sum by Date</th>
+          </tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+    </div>
     <script src="https://cdn.jsdelivr.net/npm/jquery/dist/jquery.min.js"></script>
     <script
       src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.0/dist/js/bootstrap.bundle.min.js"
@@ -91,6 +102,13 @@
     <script src="https://unpkg.com/bootstrap-table@1.20.2/dist/bootstrap-table.min.js"></script>
     <script src="https://unpkg.com/bootstrap-table@1.20.2/dist/extensions/filter-control/bootstrap-table-filter-control.min.js"></script>
     <script type="module">
+      function rowStyle(row, index) {
+        return {
+          css: {
+            "word-break": "break-word",
+          },
+        };
+      }
       const [
         { value: applicationsJsonFetchResult },
         { value: caseTypesFetchResult },
@@ -105,7 +123,6 @@
 
       let tableData = [];
       for (const day of Object.keys(applicationsJson)) {
-        let firstDateOccurance = true;
         let dateSum = 0;
         applicationsJson[day].sort((a, b) => {
           return parseInt(a.caseType) - parseInt(b.caseType);
@@ -115,53 +132,59 @@
         });
         for (const rec of applicationsJson[day]) {
           const caset = caseTypes.find((ct) => ct.id == rec.caseType).type;
-          if (firstDateOccurance) {
-            tableData.push({
-              day: day,
-              caseType: caset,
-              subTotal: rec.total,
-              subTotalPercent: `${Math.round( rec.total / dateSum * 100)}%`,
-              grandTotal: dateSum,
-            });
-            firstDateOccurance = false;
-          } else {
-            tableData.push({
-              day: day,
-              caseType: caset,
-              subTotal: rec.total,
-              subTotalPercent: `${Math.round( rec.total / dateSum * 100)}%`,
-            });
-          }
+          tableData.push({
+            day: day,
+            caseType: caset,
+            subTotal: rec.total,
+            subTotalPercent: `${Math.round((rec.total / dateSum) * 100)}%`,
+            grandTotal: dateSum,
+          });
         }
       }
 
       $(function () {
-        $("#applicationsTable").bootstrapTable({ data: tableData });
+        $("#applicationsTable").bootstrapTable({
+          data: tableData,
+          rowStyle: rowStyle,
+        });
         $("#applicationsTable").on("post-body.bs.table", function () {
-          const localData = $("#applicationsTable").bootstrapTable("getData");
-
+          const localData = $("#applicationsTable").bootstrapTable("getData", {
+            useCurrentPage: true,
+          });
+          let currentDateIndex = 0;
           for (let index = 0; index < localData.length; index++) {
             const element = localData[index];
-            if (element.hasOwnProperty("grandTotal")) {
-              let rowSpan = 1;
-              while (
-                index + rowSpan < localData.length &&
-                !localData[index + rowSpan].hasOwnProperty("grandTotal")
-              ) {
-                rowSpan++;
+            if (index === localData.length - 1) {
+              if (element.day === localData[currentDateIndex].day) {
+                let dateSpan = index - currentDateIndex + 1;
+                if (dateSpan > 1) {
+                  $("#applicationsTable").bootstrapTable("mergeCells", {
+                    index: currentDateIndex,
+                    field: "day",
+                    rowspan: dateSpan,
+                  });
+                  $("#applicationsTable").bootstrapTable("mergeCells", {
+                    index: currentDateIndex,
+                    field: "grandTotal",
+                    rowspan: dateSpan,
+                  });
+                }
               }
-              if (rowSpan !== 1) {
+            }
+            if (element.day !== localData[currentDateIndex].day) {
+              if (index - currentDateIndex > 1) {
                 $("#applicationsTable").bootstrapTable("mergeCells", {
-                  index: index,
-                  field: "grandTotal",
-                  rowspan: rowSpan,
-                });
-                $("#applicationsTable").bootstrapTable("mergeCells", {
-                  index: index,
+                  index: currentDateIndex,
                   field: "day",
-                  rowspan: rowSpan,
+                  rowspan: index - currentDateIndex,
+                });
+                $("#applicationsTable").bootstrapTable("mergeCells", {
+                  index: currentDateIndex,
+                  field: "grandTotal",
+                  rowspan: index - currentDateIndex,
                 });
               }
+              currentDateIndex = index;
             }
           }
         });

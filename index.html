@@ -2,6 +2,10 @@
 <html lang="en">
   <head>
     <title>Daily stats from USC</title>
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1, shrink-to-fit=no"
+    />
     <!-- CSS only -->
     <link
       href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.0/dist/css/bootstrap.min.css"
@@ -9,80 +13,103 @@
       integrity="sha384-gH2yIJqKdNHPEq0n4Mqa/HGKIhSkIHeL5AyhkYV8i59U5AR6csBvApHHNl/vI1Bx"
       crossorigin="anonymous"
     />
+    <link
+      rel="stylesheet"
+      href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.7.2/font/bootstrap-icons.css"
+    />
+    <link
+      rel="stylesheet"
+      href="https://unpkg.com/bootstrap-table@1.20.2/dist/bootstrap-table.min.css"
+    />
+  </head>
+  <body>
+    <div class="container">
+      <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
+        <div class="container-fluid">
+          <button
+            class="navbar-toggler"
+            type="button"
+            data-bs-toggle="collapse"
+            data-bs-target="#navbarNavAltMarkup"
+            aria-controls="navbarNavAltMarkup"
+            aria-expanded="false"
+            aria-label="Toggle navigation"
+          >
+            <span class="navbar-toggler-icon"></span>
+          </button>
+          <a class="navbar-brand" href="#">Stats</a>
+          <div
+            class="navbar-collapse collapse w-100 order-1 order-md-0 dual-collapse2"
+            id="navbarNavAltMarkup"
+          >
+            <ul class="navbar-nav" id="navbarNav">
+              <li class="nav-item">
+                <a class="nav-link active" aria-current="page" href="#"
+                  >Decisions</a
+                >
+              </li>
+              <li class="nav-item">
+                <a class="nav-link" href="applications.html">Applications</a>
+              </li>
+              <li class="nav-item">
+                <a class="nav-link" href="statuses.html">Statuses</a>
+              </li>
+              <li class="nav-item">
+                <a class="nav-link" href="decisionstotal.html"
+                  >Decisions Totals</a
+                >
+              </li>
+              <li class="nav-item">
+                <a class="nav-link" href="applicationstotal.html"
+                  >Applications Totals</a
+                >
+              </li>
+              <li class="nav-item">
+                <a class="nav-link" href="statusestotal.html"
+                  >Statuses Totals</a
+                >
+              </li>
+            </ul>
+          </div>
+        </div>
+      </nav>
+      <table
+        id="decisionsTable"
+        data-pagination="true"
+        data-page-size="25"
+        data-filter-control="true"
+        aria-describedby="Table of decisions by institutions and date"
+      >
+        <thead>
+          <tr>
+            <th data-field="day" data-filter-control="input">Date</th>
+            <th data-field="institution" data-filter-control="select">Who</th>
+            <th data-field="caseType" data-filter-control="select">
+              Case Type
+            </th>
+            <th data-field="decision" data-filter-control="select">Decision</th>
+            <th data-field="total">Total</th>
+          </tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+    </div>
+    <script src="https://cdn.jsdelivr.net/npm/jquery/dist/jquery.min.js"></script>
     <script
       src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.0/dist/js/bootstrap.bundle.min.js"
       integrity="sha384-A3rJD856KowSb7dwlZdYEkO39Gagi7vIsF0jrRAoQmDKKtQBHUuLZ9AsSv4jD4Xa"
       crossorigin="anonymous"
     ></script>
-    <link rel="stylesheet" href="css/datatable-bootstrap.min.css" />
-    <script type="text/javascript" src="js/datatable.js"></script>
-  </head>
-  <body>
-    <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
-      <div class="container-fluid">
-        <button
-          class="navbar-toggler"
-          type="button"
-          data-bs-toggle="collapse"
-          data-bs-target="#navbarNavAltMarkup"
-          aria-controls="navbarNavAltMarkup"
-          aria-expanded="false"
-          aria-label="Toggle navigation"
-        >
-          <span class="navbar-toggler-icon"></span>
-        </button>
-        <a class="navbar-brand" href="#">Stats</a>
-        <div
-          class="navbar-collapse collapse w-100 order-1 order-md-0 dual-collapse2"
-          id="navbarNavAltMarkup"
-        >
-          <ul class="navbar-nav" id="navbarNav">
-            <li class="nav-item">
-              <a class="nav-link active" aria-current="page" href="#"
-                >Decisions</a
-              >
-            </li>
-            <li class="nav-item">
-              <a class="nav-link" href="applications.html">Applications</a>
-            </li>
-            <li class="nav-item">
-              <a class="nav-link" href="statuses.html">Statuses</a>
-            </li>
-            <li class="nav-item">
-              <a class="nav-link" href="decisionstotal.html"
-                >Decisions Totals</a
-              >
-            </li>
-            <li class="nav-item">
-              <a class="nav-link" href="applicationstotal.html"
-                >Applications Totals</a
-              >
-            </li>
-            <li class="nav-item">
-              <a class="nav-link" href="statusestotal.html">Statuses Totals</a>
-            </li>
-          </ul>
-        </div>
-      </div>
-    </nav>
-    <table
-      id="decisionsTable"
-      class="table"
-      aria-describedby="Table of decisions by institutions and date"
-    >
-      <thead>
-        <tr>
-          <th>Date</th>
-          <th>Who</th>
-          <th>Case Type</th>
-          <th>Decision</th>
-          <th>Total</th>
-        </tr>
-      </thead>
-      <tbody></tbody>
-    </table>
-    <div id="decisionsPagination" class="paging"></div>
+    <script src="https://unpkg.com/bootstrap-table@1.20.2/dist/bootstrap-table.min.js"></script>
+    <script src="https://unpkg.com/bootstrap-table@1.20.2/dist/extensions/filter-control/bootstrap-table-filter-control.min.js"></script>
     <script type="module">
+      function rowStyle(row, index) {
+        return {
+          css: {
+            "word-break": "break-word",
+          },
+        };
+      }
       const [
         { value: decisionsJsonFetchResult },
         { value: institutionsFetchResult },
@@ -99,26 +126,146 @@
       const caseTypes = await caseTypesFetchResult.json();
       const decisionMarkers = await decisionMarkersFetchResult.json();
 
-      let decisionsTable = document.getElementById("decisionsTable");
-
       let tableData = [];
       for (const day of Object.keys(decisionsJson).sort()) {
+        decisionsJson[day].sort((a, b) => {
+          return (
+            parseInt(a.institution) - parseInt(b.institution) ||
+            parseInt(a.caseType) - parseInt(b.caseType) ||
+            parseInt(a.decisionMarker) - parseInt(b.decisionMarker)
+          );
+        });
         for (const rec of decisionsJson[day]) {
           const inst = institutions.find((i) => i.id == rec.institution).name;
           const caset = caseTypes.find((ct) => ct.id == rec.caseType).type;
           const decm = decisionMarkers.find(
             (dm) => dm.id == rec.decisionMarker
           ).description;
-          tableData.push([day, inst, caset, decm, rec.total]);
+          tableData.push({
+            day: day,
+            institution: inst,
+            caseType: caset,
+            decision: decm,
+            total: rec.total,
+          });
         }
       }
 
-      var datatable = new DataTable(decisionsTable, {
-        pageSize: 50,
-        sort: "*",
-        filters: [true, "select", "select", "select", false],
+      $("#decisionsTable").bootstrapTable({
         data: tableData,
-        pagingListClass: "pagination",
+        rowStyle: rowStyle,
+      });
+
+      $("#decisionsTable").on("post-body.bs.table", function () {
+        const localData = $("#decisionsTable").bootstrapTable("getData", {
+          useCurrentPage: true,
+        });
+        let currentDateIndex = 0;
+        let currentInstitutionIndex = 0;
+        let currentCaseTypeIndex = 0;
+        for (let index = 1; index < localData.length; index++) {
+          const element = localData[index];
+          if (index === localData.length - 1) {
+            if (element.day === localData[currentDateIndex].day) {
+              let dateSpan = index - currentDateIndex + 1;
+              if (dateSpan > 1) {
+                $("#decisionsTable").bootstrapTable("mergeCells", {
+                  index: currentDateIndex,
+                  field: "day",
+                  rowspan: dateSpan,
+                });
+              }
+              if (
+                element.institution ===
+                localData[currentInstitutionIndex].institution
+              ) {
+                let instSpan = index - currentInstitutionIndex + 1;
+                if (instSpan > 1) {
+                  $("#decisionsTable").bootstrapTable("mergeCells", {
+                    index: currentInstitutionIndex,
+                    field: "institution",
+                    rowspan: instSpan,
+                  });
+                }
+                if (
+                  element.caseType === localData[currentCaseTypeIndex].caseType
+                ) {
+                  let caseTypeSpan = index - currentCaseTypeIndex + 1;
+                  if (caseTypeSpan > 1) {
+                    $("#decisionsTable").bootstrapTable("mergeCells", {
+                      index: currentCaseTypeIndex,
+                      field: "caseType",
+                      rowspan: caseTypeSpan,
+                    });
+                  }
+                }
+              }
+            }
+          }
+          if (element.day !== localData[currentDateIndex].day) {
+            let dateSpan = index - currentDateIndex;
+            if (dateSpan > 1) {
+              $("#decisionsTable").bootstrapTable("mergeCells", {
+                index: currentDateIndex,
+                field: "day",
+                rowspan: dateSpan,
+              });
+            }
+            let instSpan = index - currentInstitutionIndex;
+            if (instSpan > 1) {
+              $("#decisionsTable").bootstrapTable("mergeCells", {
+                index: currentInstitutionIndex,
+                field: "institution",
+                rowspan: instSpan,
+              });
+            }
+            let caseTypeSpan = index - currentCaseTypeIndex;
+            if (caseTypeSpan > 1) {
+              $("#decisionsTable").bootstrapTable("mergeCells", {
+                index: currentCaseTypeIndex,
+                field: "caseType",
+                rowspan: caseTypeSpan,
+              });
+            }
+            currentInstitutionIndex = index;
+            currentDateIndex = index;
+            currentCaseTypeIndex = index;
+          }
+          if (
+            element.institution !==
+            localData[currentInstitutionIndex].institution
+          ) {
+            let instSpan = index - currentInstitutionIndex;
+            if (instSpan > 1) {
+              $("#decisionsTable").bootstrapTable("mergeCells", {
+                index: currentInstitutionIndex,
+                field: "institution",
+                rowspan: instSpan,
+              });
+            }
+            let caseTypeSpan = index - currentCaseTypeIndex;
+            if (caseTypeSpan > 1) {
+              $("#decisionsTable").bootstrapTable("mergeCells", {
+                index: currentCaseTypeIndex,
+                field: "caseType",
+                rowspan: caseTypeSpan,
+              });
+            }
+            currentInstitutionIndex = index;
+            currentCaseTypeIndex = index;
+          }
+          if (element.caseType !== localData[currentCaseTypeIndex].caseType) {
+            let caseTypeSpan = index - currentCaseTypeIndex;
+            if (caseTypeSpan > 1) {
+              $("#decisionsTable").bootstrapTable("mergeCells", {
+                index: currentCaseTypeIndex,
+                field: "caseType",
+                rowspan: caseTypeSpan,
+              });
+            }
+            currentCaseTypeIndex = index;
+          }
+        }
       });
     </script>
   </body>

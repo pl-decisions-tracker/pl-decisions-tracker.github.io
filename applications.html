@@ -1,6 +1,10 @@
 <!DOCTYPE html>
 <html lang="en">
   <head>
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1, shrink-to-fit=no"
+    />
     <title>Daily stats from USC</title>
     <!-- CSS only -->
     <link
@@ -9,17 +13,18 @@
       integrity="sha384-gH2yIJqKdNHPEq0n4Mqa/HGKIhSkIHeL5AyhkYV8i59U5AR6csBvApHHNl/vI1Bx"
       crossorigin="anonymous"
     />
-    <script
-      src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.0/dist/js/bootstrap.bundle.min.js"
-      integrity="sha384-A3rJD856KowSb7dwlZdYEkO39Gagi7vIsF0jrRAoQmDKKtQBHUuLZ9AsSv4jD4Xa"
-      crossorigin="anonymous"
-    ></script>
-    <link rel="stylesheet" href="css/datatable-bootstrap.min.css" />
-    <script type="text/javascript" src="js/datatable.js"></script>
+    <link
+      rel="stylesheet"
+      href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.7.2/font/bootstrap-icons.css"
+    />
+    <link
+      rel="stylesheet"
+      href="https://unpkg.com/bootstrap-table@1.20.2/dist/bootstrap-table.min.css"
+    />
   </head>
   <body>
-    <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
-      <div class="container-fluid">
+    <div class="container">
+      <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
         <button
           class="navbar-toggler"
           type="button"
@@ -41,7 +46,9 @@
               <a class="nav-link" href="/">Decisions</a>
             </li>
             <li class="nav-item">
-              <a class="nav-link active" aria-current="page" href="#">Applications</a>
+              <a class="nav-link active" aria-current="page" href="#"
+                >Applications</a
+              >
             </li>
             <li class="nav-item">
               <a class="nav-link" href="statuses.html">Statuses</a>
@@ -61,21 +68,43 @@
             </li>
           </ul>
         </div>
-      </div>
-    </nav>
-    <table id="applicationsTable" class="table" aria-describedby="Table of applications by institutions and date">
-      <thead>
-        <tr>
-          <th>Date</th>
-          <th>Who</th>
-          <th>Case Type</th>
-          <th>Total</th>
-        </tr>
-      </thead>
-      <tbody></tbody>
-    </table>
-    <div id="applicationsPagination" class="paging"></div>
+      </nav>
+      <table
+        id="applicationsTable"
+        data-pagination="true"
+        data-page-size="25"
+        data-filter-control="true"
+        aria-describedby="Table of applications by institutions and date"
+      >
+        <thead>
+          <tr>
+            <th data-field="day" data-filter-control="input">Date</th>
+            <th data-field="institution" data-filter-control="select">Who</th>
+            <th data-field="caseType" data-filter-control="select">
+              Case Type
+            </th>
+            <th data-field="total">Count</th>
+          </tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+    </div>
+    <script src="https://cdn.jsdelivr.net/npm/jquery/dist/jquery.min.js"></script>
+    <script
+      src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.0/dist/js/bootstrap.bundle.min.js"
+      integrity="sha384-A3rJD856KowSb7dwlZdYEkO39Gagi7vIsF0jrRAoQmDKKtQBHUuLZ9AsSv4jD4Xa"
+      crossorigin="anonymous"
+    ></script>
+    <script src="https://unpkg.com/bootstrap-table@1.20.2/dist/bootstrap-table.min.js"></script>
+    <script src="https://unpkg.com/bootstrap-table@1.20.2/dist/extensions/filter-control/bootstrap-table-filter-control.min.js"></script>
     <script type="module">
+      function rowStyle(row, index) {
+        return {
+          css: {
+            "word-break": "break-word",
+          },
+        };
+      }
       const [
         { value: applicationsJsonFetchResult },
         { value: institutionsFetchResult },
@@ -89,23 +118,95 @@
       const institutions = await institutionsFetchResult.json();
       const caseTypes = await caseTypesFetchResult.json();
 
-      let applicationsTable = document.getElementById("applicationsTable");
-
       let tableData = [];
       for (const day of Object.keys(applicationsJson).sort()) {
+        applicationsJson[day].sort((a, b) => {
+          return (
+            parseInt(a.institution) - parseInt(b.institution) ||
+            parseInt(a.caseType) - parseInt(b.caseType)
+          );
+        });
         for (const rec of applicationsJson[day]) {
           const inst = institutions.find((i) => i.id == rec.institution).name;
           const caset = caseTypes.find((ct) => ct.id == rec.caseType).type;
-          tableData.push([day, inst, caset, rec.total]);
+          tableData.push({
+            day: day,
+            institution: inst,
+            caseType: caset,
+            total: rec.total,
+          });
         }
       }
 
-      var datatable = new DataTable(applicationsTable, {
-        pageSize: 50,
-        sort: "*",
-        filters: [true, "select", "select", false],
+      $("#applicationsTable").bootstrapTable({
         data: tableData,
-        pagingListClass: "pagination",
+        rowStyle: rowStyle,
+      });
+      $("#applicationsTable").on("post-body.bs.table", function () {
+        const localData = $("#applicationsTable").bootstrapTable("getData", {
+          useCurrentPage: true,
+        });
+        let currentDateIndex = 0;
+        let currentInstitutionIndex = 0;
+        for (let index = 1; index < localData.length; index++) {
+          const element = localData[index];
+          if (index === localData.length - 1) {
+            if (element.day === localData[currentDateIndex].day) {
+              let dateSpan = index - currentDateIndex + 1;
+              if (dateSpan > 1) {
+                $("#applicationsTable").bootstrapTable("mergeCells", {
+                  index: currentDateIndex,
+                  field: "day",
+                  rowspan: dateSpan,
+                });
+              }
+              if (
+                element.institution ===
+                localData[currentInstitutionIndex].institution
+              ) {
+                let instSpan = index - currentInstitutionIndex + 1;
+                if (instSpan > 1) {
+                  $("#applicationsTable").bootstrapTable("mergeCells", {
+                    index: currentInstitutionIndex,
+                    field: "institution",
+                    rowspan: instSpan,
+                  });
+                }
+              }
+            }
+          }
+          if (element.day !== localData[currentDateIndex].day) {
+            if (index - currentDateIndex > 1) {
+              $("#applicationsTable").bootstrapTable("mergeCells", {
+                index: currentDateIndex,
+                field: "day",
+                rowspan: index - currentDateIndex,
+              });
+            }
+            if (index - currentInstitutionIndex > 1) {
+              $("#applicationsTable").bootstrapTable("mergeCells", {
+                index: currentInstitutionIndex,
+                field: "institution",
+                rowspan: index - currentInstitutionIndex,
+              });
+            }
+            currentInstitutionIndex = index;
+            currentDateIndex = index;
+          }
+          if (
+            element.institution !==
+            localData[currentInstitutionIndex].institution
+          ) {
+            if (index - currentInstitutionIndex > 1) {
+              $("#applicationsTable").bootstrapTable("mergeCells", {
+                index: currentInstitutionIndex,
+                field: "institution",
+                rowspan: index - currentInstitutionIndex,
+              });
+            }
+            currentInstitutionIndex = index;
+          }
+        }
       });
     </script>
   </body>
