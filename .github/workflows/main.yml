@@ -25,46 +25,7 @@ jobs:
     # We need %2C${current_date} in order by to overcome agressive API caching
     - name: update json files
       run: |
-        current_year=$(date +"%Y")
-        currend_date=$(date +"%Y-%m-%d")
-        suffix=$(echo $RANDOM | md5sum | head -c 20; echo;)
-        group_by="institution%2CdecisionMarker%2CcaseType"
-        fields="institution%2CdecisionMarker%2CcaseType%2Ctotal"
-        order_by="institution%2CdecisionMarker%2CcaseType%2C${suffix}"
-        echo "https://migracje.gov.pl/wp-json/udscmap/v1/decisions/poland?groupBy=${group_by}&fields=${fields}&orderBy=${order_by}&year=${current_year}&country=RU"
-        curl --location --silent -H "Accept: application/json" "https://migracje.gov.pl/wp-json/udscmap/v1/decisions/poland?groupBy=${group_by}&fields=${fields}&orderBy=${order_by}&year=${current_year}&country=RU" > /tmp/decisions.json
-        echo $(cat decisions.json | jq -r -c --arg today "$currend_date" --slurpfile current_json /tmp/decisions.json '. + {($today): $current_json[0]}') > decisions.json
-        group_by="institution%2Cstatus"
-        fields="institution%2Cstatus%2Ctotal"
-        order_by="institution%2C${suffix}"
-        echo "https://migracje.gov.pl/wp-json/udscmap/v1/statuses/poland?groupBy=${group_by}&fields=${fields}&orderBy=${order_by}&year=${current_year}&country=RU"
-        curl --location --silent -H "Accept: application/json" "https://migracje.gov.pl/wp-json/udscmap/v1/statuses/poland?groupBy=${group_by}&fields=${fields}&orderBy=${order_by}&year=${current_year}&country=RU" > /tmp/statuses.json
-        echo $(cat statuses.json | jq -r -c --arg today "$currend_date" --slurpfile current_json /tmp/statuses.json '. + {($today): $current_json[0]}') > statuses.json
-        group_by="institution%2CcaseType"
-        fields="institution%2CcaseType%2Ctotal"
-        order_by="institution%2C${suffix}"
-        echo "https://migracje.gov.pl/wp-json/udscmap/v1/applications/poland?groupBy=${group_by}&fields=${fields}&orderBy=${order_by}&year=${current_year}&country=RU"
-        curl --location --silent -H "Accept: application/json" "https://migracje.gov.pl/wp-json/udscmap/v1/applications/poland?groupBy=${group_by}&fields=${fields}&orderBy=${order_by}&year=${current_year}&country=RU" > /tmp/applications.json
-        echo $(cat applications.json | jq -r -c --arg today "$currend_date" --slurpfile current_json /tmp/applications.json '. + {($today): $current_json[0]}') > applications.json
-        #Totals
-        group_by="decisionMarker%2CcaseType"
-        fields="decisionMarker%2CcaseType%2Ctotal"
-        order_by="decisionMarker%2CcaseType%2C${suffix}"
-        echo "https://migracje.gov.pl/wp-json/udscmap/v1/decisions/poland?groupBy=${group_by}&fields=${fields}&orderBy=${order_by}&year=${current_year}&country=RU"
-        curl --location --silent -H "Accept: application/json" "https://migracje.gov.pl/wp-json/udscmap/v1/decisions/poland?groupBy=${group_by}&fields=${fields}&orderBy=${order_by}&year=${current_year}&country=RU" > /tmp/decisionsTotal.json
-        echo $(cat decisionsTotal.json | jq -r -c --arg today "$currend_date" --slurpfile current_json /tmp/decisionsTotal.json '. + {($today): $current_json[0]}') > decisionsTotal.json
-        group_by="status"
-        fields="status%2Ctotal"
-        order_by="status%2C${suffix}"
-        echo "https://migracje.gov.pl/wp-json/udscmap/v1/statuses/poland?groupBy=${group_by}&fields=${fields}&orderBy=${order_by}&year=${current_year}&country=RU"
-        curl --location --silent -H "Accept: application/json" "https://migracje.gov.pl/wp-json/udscmap/v1/statuses/poland?groupBy=${group_by}&fields=${fields}&orderBy=${order_by}&year=${current_year}&country=RU" > /tmp/statusesTotal.json
-        echo $(cat statusesTotal.json | jq -r -c --arg today "$currend_date" --slurpfile current_json /tmp/statusesTotal.json '. + {($today): $current_json[0]}') > statusesTotal.json
-        group_by="caseType"
-        fields="caseType%2Ctotal"
-        order_by="caseType%2C${suffix}"
-        echo "https://migracje.gov.pl/wp-json/udscmap/v1/applications/poland?groupBy=${group_by}&fields=${fields}&orderBy=${order_by}&year=${current_year}&country=RU"
-        curl --location --silent -H "Accept: application/json" "https://migracje.gov.pl/wp-json/udscmap/v1/applications/poland?groupBy=${group_by}&fields=${fields}&orderBy=${order_by}&year=${current_year}&country=RU" > /tmp/applicationsTotal.json
-        echo $(cat applicationsTotal.json | jq -r -c --arg today "$currend_date" --slurpfile current_json /tmp/applicationsTotal.json '. + {($today): $current_json[0]}') > applicationsTotal.json
+        source update-files.sh
     - name: Commit and push changes
       run: |-
         git diff
