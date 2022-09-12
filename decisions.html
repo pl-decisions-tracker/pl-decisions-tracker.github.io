@@ -47,15 +47,15 @@
                 <a class="nav-link" href="/">Main</a>
               </li>
               <li class="nav-item">
-                <a class="nav-link" href="decisions.html">Decisions</a>
+                <a class="nav-link active" aria-current="page" href="#"
+                  >Decisions</a
+                >
               </li>
               <li class="nav-item">
                 <a class="nav-link" href="applications.html">Applications</a>
               </li>
               <li class="nav-item">
-                <a class="nav-link active" aria-current="page" href="#"
-                  >Statuses</a
-                >
+                <a class="nav-link" href="statuses.html">Statuses</a>
               </li>
               <li class="nav-item">
                 <a class="nav-link" href="decisionstotal.html"
@@ -77,17 +77,20 @@
         </div>
       </nav>
       <table
-        id="statusesTable"
+        id="decisionsTable"
         data-pagination="true"
         data-page-size="25"
         data-filter-control="true"
-        aria-describedby="Table of statuses by institutions and date"
+        aria-describedby="Table of decisions by institutions and date"
       >
         <thead>
           <tr>
             <th data-field="day" data-filter-control="input">Date</th>
             <th data-field="institution" data-filter-control="select">Who</th>
-            <th data-field="status" data-filter-control="select">Status</th>
+            <th data-field="caseType" data-filter-control="select">
+              Case Type
+            </th>
+            <th data-field="decision" data-filter-control="select">Decision</th>
             <th data-field="total">Total</th>
           </tr>
         </thead>
@@ -111,55 +114,65 @@
         };
       }
       const [
-        { value: statusesJsonFetchResult },
+        { value: decisionsJsonFetchResult },
         { value: institutionsFetchResult },
-        { value: statusesFetchResult },
+        { value: caseTypesFetchResult },
+        { value: decisionMarkersFetchResult },
       ] = await Promise.allSettled([
-        fetch("./statuses.json"),
+        fetch("./decisions.json"),
         fetch("./institution.json"),
-        fetch("./status.json"),
+        fetch("./caseType.json"),
+        fetch("./decisionMarker.json"),
       ]);
-      const statusesJson = await statusesJsonFetchResult.json();
+      const decisionsJson = await decisionsJsonFetchResult.json();
       const institutions = await institutionsFetchResult.json();
-      const statuses = await statusesFetchResult.json();
+      const caseTypes = await caseTypesFetchResult.json();
+      const decisionMarkers = await decisionMarkersFetchResult.json();
 
       let tableData = [];
-      for (const day of Object.keys(statusesJson).sort()) {
-        statusesJson[day].sort((a, b) => {
+      for (const day of Object.keys(decisionsJson).sort()) {
+        decisionsJson[day].sort((a, b) => {
           return (
             parseInt(a.institution) - parseInt(b.institution) ||
-            parseInt(a.status) - parseInt(b.status)
+            parseInt(a.caseType) - parseInt(b.caseType) ||
+            parseInt(a.decisionMarker) - parseInt(b.decisionMarker)
           );
         });
-        for (const rec of statusesJson[day]) {
+        for (const rec of decisionsJson[day]) {
           const inst = institutions.find((i) => i.id == rec.institution).name;
-          const st = statuses.find((s) => s.id == rec.status).status;
+          const caset = caseTypes.find((ct) => ct.id == rec.caseType).type;
+          const decm = decisionMarkers.find(
+            (dm) => dm.id == rec.decisionMarker
+          ).description;
           tableData.push({
             day: day,
             institution: inst,
-            status: st,
+            caseType: caset,
+            decision: decm,
             total: rec.total,
           });
         }
       }
 
-      $("#statusesTable").bootstrapTable({
+      $("#decisionsTable").bootstrapTable({
         data: tableData,
         rowStyle: rowStyle,
       });
-      $("#statusesTable").on("post-body.bs.table", function () {
-        const localData = $("#statusesTable").bootstrapTable("getData", {
+
+      $("#decisionsTable").on("post-body.bs.table", function () {
+        const localData = $("#decisionsTable").bootstrapTable("getData", {
           useCurrentPage: true,
         });
         let currentDateIndex = 0;
         let currentInstitutionIndex = 0;
+        let currentCaseTypeIndex = 0;
         for (let index = 1; index < localData.length; index++) {
           const element = localData[index];
           if (index === localData.length - 1) {
             if (element.day === localData[currentDateIndex].day) {
               let dateSpan = index - currentDateIndex + 1;
               if (dateSpan > 1) {
-                $("#statusesTable").bootstrapTable("mergeCells", {
+                $("#decisionsTable").bootstrapTable("mergeCells", {
                   index: currentDateIndex,
                   field: "day",
                   rowspan: dateSpan,
@@ -171,11 +184,23 @@
               ) {
                 let instSpan = index - currentInstitutionIndex + 1;
                 if (instSpan > 1) {
-                  $("#statusesTable").bootstrapTable("mergeCells", {
+                  $("#decisionsTable").bootstrapTable("mergeCells", {
                     index: currentInstitutionIndex,
                     field: "institution",
                     rowspan: instSpan,
                   });
+                }
+                if (
+                  element.caseType === localData[currentCaseTypeIndex].caseType
+                ) {
+                  let caseTypeSpan = index - currentCaseTypeIndex + 1;
+                  if (caseTypeSpan > 1) {
+                    $("#decisionsTable").bootstrapTable("mergeCells", {
+                      index: currentCaseTypeIndex,
+                      field: "caseType",
+                      rowspan: caseTypeSpan,
+                    });
+                  }
                 }
               }
             }
@@ -183,7 +208,7 @@
           if (element.day !== localData[currentDateIndex].day) {
             let dateSpan = index - currentDateIndex;
             if (dateSpan > 1) {
-              $("#statusesTable").bootstrapTable("mergeCells", {
+              $("#decisionsTable").bootstrapTable("mergeCells", {
                 index: currentDateIndex,
                 field: "day",
                 rowspan: dateSpan,
@@ -191,14 +216,23 @@
             }
             let instSpan = index - currentInstitutionIndex;
             if (instSpan > 1) {
-              $("#statusesTable").bootstrapTable("mergeCells", {
+              $("#decisionsTable").bootstrapTable("mergeCells", {
                 index: currentInstitutionIndex,
                 field: "institution",
                 rowspan: instSpan,
               });
             }
+            let caseTypeSpan = index - currentCaseTypeIndex;
+            if (caseTypeSpan > 1) {
+              $("#decisionsTable").bootstrapTable("mergeCells", {
+                index: currentCaseTypeIndex,
+                field: "caseType",
+                rowspan: caseTypeSpan,
+              });
+            }
             currentInstitutionIndex = index;
             currentDateIndex = index;
+            currentCaseTypeIndex = index;
           }
           if (
             element.institution !==
@@ -206,13 +240,33 @@
           ) {
             let instSpan = index - currentInstitutionIndex;
             if (instSpan > 1) {
-              $("#statusesTable").bootstrapTable("mergeCells", {
+              $("#decisionsTable").bootstrapTable("mergeCells", {
                 index: currentInstitutionIndex,
                 field: "institution",
                 rowspan: instSpan,
               });
             }
+            let caseTypeSpan = index - currentCaseTypeIndex;
+            if (caseTypeSpan > 1) {
+              $("#decisionsTable").bootstrapTable("mergeCells", {
+                index: currentCaseTypeIndex,
+                field: "caseType",
+                rowspan: caseTypeSpan,
+              });
+            }
             currentInstitutionIndex = index;
+            currentCaseTypeIndex = index;
+          }
+          if (element.caseType !== localData[currentCaseTypeIndex].caseType) {
+            let caseTypeSpan = index - currentCaseTypeIndex;
+            if (caseTypeSpan > 1) {
+              $("#decisionsTable").bootstrapTable("mergeCells", {
+                index: currentCaseTypeIndex,
+                field: "caseType",
+                rowspan: caseTypeSpan,
+              });
+            }
+            currentCaseTypeIndex = index;
           }
         }
       });
