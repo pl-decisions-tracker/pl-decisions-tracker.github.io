@@ -1,11 +1,10 @@
 <!DOCTYPE html>
 <html lang="en">
   <head>
-    <title>Daily stats from USC</title>
-    <meta
-      name="viewport"
-      content="width=device-width, initial-scale=1, shrink-to-fit=no"
-    />
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Следим за отказами</title>
     <!-- CSS only -->
     <link
       href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.0/dist/css/bootstrap.min.css"
@@ -23,93 +22,90 @@
     />
   </head>
   <body>
-    <div class="container">
-      <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
-        <div class="container-fluid">
-          <button
-            class="navbar-toggler"
-            type="button"
-            data-bs-toggle="collapse"
-            data-bs-target="#navbarNavAltMarkup"
-            aria-controls="navbarNavAltMarkup"
-            aria-expanded="false"
-            aria-label="Toggle navigation"
-          >
-            <span class="navbar-toggler-icon"></span>
-          </button>
-          <a class="navbar-brand" href="#">Stats</a>
-          <div
-            class="navbar-collapse collapse w-100 order-1 order-md-0 dual-collapse2"
-            id="navbarNavAltMarkup"
-          >
-            <ul class="navbar-nav" id="navbarNav">
-              <li class="nav-item">
-                <a class="nav-link active" aria-current="page" href="#"
-                  >Decisions</a
-                >
-              </li>
-              <li class="nav-item">
-                <a class="nav-link" href="applications.html">Applications</a>
-              </li>
-              <li class="nav-item">
-                <a class="nav-link" href="statuses.html">Statuses</a>
-              </li>
-              <li class="nav-item">
-                <a class="nav-link" href="decisionstotal.html"
-                  >Decisions Totals</a
-                >
-              </li>
-              <li class="nav-item">
-                <a class="nav-link" href="applicationstotal.html"
-                  >Applications Totals</a
-                >
-              </li>
-              <li class="nav-item">
-                <a class="nav-link" href="statusestotal.html"
-                  >Statuses Totals</a
-                >
-              </li>
-            </ul>
-          </div>
+    <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
+      <div class="container-fluid">
+        <button
+          class="navbar-toggler"
+          type="button"
+          data-bs-toggle="collapse"
+          data-bs-target="#navbarNavAltMarkup"
+          aria-controls="navbarNavAltMarkup"
+          aria-expanded="false"
+          aria-label="Toggle navigation"
+        >
+          <span class="navbar-toggler-icon"></span>
+        </button>
+        <a class="navbar-brand" href="#">Stats</a>
+        <div
+          class="navbar-collapse collapse w-100 order-1 order-md-0 dual-collapse2"
+          id="navbarNavAltMarkup"
+        >
+          <ul class="navbar-nav" id="navbarNav">
+            <li class="nav-item">
+              <a class="nav-link active" aria-current="page" href="#">Main</a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link" href="decisions.html">Decisions</a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link" href="applications.html">Applications</a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link" href="statuses.html">Statuses</a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link" href="decisionstotal.html"
+                >Decisions Totals</a
+              >
+            </li>
+            <li class="nav-item">
+              <a class="nav-link" href="applicationstotal.html"
+                >Applications Totals</a
+              >
+            </li>
+            <li class="nav-item">
+              <a class="nav-link" href="statusestotal.html"
+                >Statuses Totals</a
+              >
+            </li>
+          </ul>
         </div>
-      </nav>
-      <table
-        id="decisionsTable"
-        data-pagination="true"
-        data-page-size="25"
-        data-filter-control="true"
-        aria-describedby="Table of decisions by institutions and date"
-      >
-        <thead>
-          <tr>
-            <th data-field="day" data-filter-control="input">Date</th>
-            <th data-field="institution" data-filter-control="select">Who</th>
-            <th data-field="caseType" data-filter-control="select">
-              Case Type
-            </th>
-            <th data-field="decision" data-filter-control="select">Decision</th>
-            <th data-field="total">Total</th>
-          </tr>
-        </thead>
-        <tbody></tbody>
-      </table>
+      </div>
+    </nav>
+    <p>Обновление происходит ежедневно в 23:00</p>
+    <p id="lastChange"></p>
+    <div class="d-flex flex-wrap">
+      <div id="TRP" class="p-2"></div>
+      <div id="PRP" class="p-2"></div>
+      <div id="EULTRP" class="p-2"></div>
+      <div id="IP" class="p-2"></div>
     </div>
-    <script src="https://cdn.jsdelivr.net/npm/jquery/dist/jquery.min.js"></script>
     <script
-      src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.0/dist/js/bootstrap.bundle.min.js"
-      integrity="sha384-A3rJD856KowSb7dwlZdYEkO39Gagi7vIsF0jrRAoQmDKKtQBHUuLZ9AsSv4jD4Xa"
+      src="https://cdn.jsdelivr.net/npm/chart.js@3.9.1/dist/chart.min.js"
+      integrity="sha256-+8RZJua0aEWg+QVVKg4LEzEEm/8RFez5Tb4JBNiV5xA="
       crossorigin="anonymous"
     ></script>
-    <script src="https://unpkg.com/bootstrap-table@1.20.2/dist/bootstrap-table.min.js"></script>
-    <script src="https://unpkg.com/bootstrap-table@1.20.2/dist/extensions/filter-control/bootstrap-table-filter-control.min.js"></script>
     <script type="module">
-      function rowStyle(row, index) {
-        return {
-          css: {
-            "word-break": "break-word",
-          },
-        };
-      }
+      const daysDeclensionRus = (num) => {
+        switch (num % 10) {
+          case 1:
+            return `${num} день`;
+          case 2:
+          case 3:
+          case 4:
+            return `${num} дня`;
+          case 5:
+          case 6:
+          case 7:
+          case 8:
+          case 9:
+          case 0:
+            return `${num} дней`;
+          default:
+            throw new Error(`Unknown number '${num}'!`);
+        }
+      };
+
       const [
         { value: decisionsJsonFetchResult },
         { value: institutionsFetchResult },
@@ -126,146 +122,362 @@
       const caseTypes = await caseTypesFetchResult.json();
       const decisionMarkers = await decisionMarkersFetchResult.json();
 
-      let tableData = [];
-      for (const day of Object.keys(decisionsJson).sort()) {
-        decisionsJson[day].sort((a, b) => {
+      let previousChange = null;
+      let lastChange = null;
+      let caseTypeChartData = {
+        "Ochrona mi\u0119dzynarodowa": {
+          labels: [],
+          datasets: [
+            {
+              label: "Pozytywna",
+              data: [],
+              borderColor: "rgb(75, 192, 192)",
+              backgroundColor: "rgba(75, 192, 192, 0.5)",
+            },
+            {
+              label: "Negatywna",
+              data: [],
+              borderColor: "rgb(255, 99, 132)",
+              backgroundColor: "rgba(255, 99, 132, 0.5)",
+            },
+            {
+              label: "Umorzenie",
+              data: [],
+              borderColor: "rgb(54, 162, 235)",
+              backgroundColor: "rgba(54, 162, 235, 0.5)",
+            },
+            {
+              label: "Ochrona uzupełniająca",
+              data: [],
+              borderColor: "rgb(153, 102, 255)",
+              backgroundColor: "rgba(153, 102, 255, 0.5)",
+            },
+          ],
+        },
+        "Pobyt czasowy": {
+          labels: [],
+          datasets: [
+            {
+              label: "Pozytywna",
+              data: [],
+              borderColor: "rgb(75, 192, 192)",
+              backgroundColor: "rgba(75, 192, 192, 0.5)",
+            },
+            {
+              label: "Negatywna",
+              data: [],
+              borderColor: "rgb(255, 99, 132)",
+              backgroundColor: "rgba(255, 99, 132, 0.5)",
+            },
+            {
+              label: "Umorzenie",
+              data: [],
+              borderColor: "rgb(54, 162, 235)",
+              backgroundColor: "rgba(54, 162, 235, 0.5)",
+            },
+          ],
+        },
+        "Pobyt rezydenta d\u0142ugoterminowego UE": {
+          labels: [],
+          datasets: [
+            {
+              label: "Pozytywna",
+              data: [],
+              borderColor: "rgb(75, 192, 192)",
+              backgroundColor: "rgba(75, 192, 192, 0.5)",
+            },
+            {
+              label: "Negatywna",
+              data: [],
+              borderColor: "rgb(255, 99, 132)",
+              backgroundColor: "rgba(255, 99, 132, 0.5)",
+            },
+            {
+              label: "Umorzenie",
+              data: [],
+              borderColor: "rgb(54, 162, 235)",
+              backgroundColor: "rgba(54, 162, 235, 0.5)",
+            },
+          ],
+        },
+        "Pobyt sta\u0142y": {
+          labels: [],
+          datasets: [
+            {
+              label: "Pozytywna",
+              data: [],
+              borderColor: "rgb(75, 192, 192)",
+              backgroundColor: "rgba(75, 192, 192, 0.5)",
+            },
+            {
+              label: "Negatywna",
+              data: [],
+              borderColor: "rgb(255, 99, 132)",
+              backgroundColor: "rgba(255, 99, 132, 0.5)",
+            },
+            {
+              label: "Umorzenie",
+              data: [],
+              borderColor: "rgb(54, 162, 235)",
+              backgroundColor: "rgba(54, 162, 235, 0.5)",
+            },
+          ],
+        },
+      };
+      for (let i of Object.keys(decisionsJson).sort()) {
+        const dayRecord = decisionsJson[i];
+        dayRecord.sort((a, b) => {
           return (
             parseInt(a.institution) - parseInt(b.institution) ||
             parseInt(a.caseType) - parseInt(b.caseType) ||
             parseInt(a.decisionMarker) - parseInt(b.decisionMarker)
           );
         });
-        for (const rec of decisionsJson[day]) {
-          const inst = institutions.find((i) => i.id == rec.institution).name;
-          const caset = caseTypes.find((ct) => ct.id == rec.caseType).type;
-          const decm = decisionMarkers.find(
-            (dm) => dm.id == rec.decisionMarker
+        let dayTotal = 0;
+        let dayInstitutionTotal = new Map();
+        let dayCasetypeTotal = new Map();
+        for (let j = 0; j < dayRecord.length; j++) {
+          const institutionRecord = dayRecord[j];
+          dayTotal += institutionRecord.total;
+          const institutionName = institutions.find(
+            (i) => i.id == institutionRecord.institution
+          ).name;
+          const caseTypeName = caseTypes.find(
+            (ct) => ct.id == institutionRecord.caseType
+          ).type;
+          const decisionMarkerName = decisionMarkers.find(
+            (dm) => dm.id == institutionRecord.decisionMarker
           ).description;
-          tableData.push({
-            day: day,
-            institution: inst,
-            caseType: caset,
-            decision: decm,
-            total: rec.total,
-          });
+
+          // Institutions
+          const dayInstitutionTotalKey = `${institutionName}`;
+          if (dayInstitutionTotal.has(dayInstitutionTotalKey)) {
+            let tempInst = dayInstitutionTotal.get(dayInstitutionTotalKey);
+            tempInst.total += institutionRecord.total;
+            if (tempInst.caseTypes.hasOwnProperty(caseTypeName)) {
+              tempInst.caseTypes[caseTypeName].total += institutionRecord.total;
+            } else {
+              tempInst.caseTypes[caseTypeName] = {
+                total: institutionRecord.total,
+                decisions: {},
+              };
+            }
+            if (
+              tempInst.caseTypes[caseTypeName].decisions.hasOwnProperty(
+                decisionMarkerName
+              )
+            ) {
+              tempInst.caseTypes[caseTypeName].decisions[decisionMarkerName] +=
+                institutionRecord.total;
+            } else {
+              tempInst.caseTypes[caseTypeName].decisions[decisionMarkerName] =
+                institutionRecord.total;
+            }
+          } else {
+            dayInstitutionTotal.set(dayInstitutionTotalKey, {
+              total: institutionRecord.total,
+              caseTypes: {
+                [caseTypeName]: {
+                  total: institutionRecord.total,
+                  decisions: {
+                    [decisionMarkerName]: institutionRecord.total,
+                  },
+                },
+              },
+            });
+          }
+
+          // Case Types
+          const dayCaseTypeKey = `${caseTypeName}`;
+          if (dayCasetypeTotal.has(dayCaseTypeKey)) {
+            let tempCase = dayCasetypeTotal.get(dayCaseTypeKey);
+            tempCase.total += institutionRecord.total;
+            if (tempCase.decisions.hasOwnProperty(decisionMarkerName)) {
+              tempCase.decisions[decisionMarkerName] += institutionRecord.total;
+            } else {
+              tempCase.decisions[decisionMarkerName] = institutionRecord.total;
+            }
+          } else {
+            dayCasetypeTotal.set(dayCaseTypeKey, {
+              total: institutionRecord.total,
+              decisions: {
+                [decisionMarkerName]: institutionRecord.total,
+              },
+            });
+          }
+        }
+        if (lastChange?.total !== dayTotal) {
+          previousChange = lastChange;
+          lastChange = {
+            date: i,
+            total: dayTotal,
+            institutions: {
+              ...Object.fromEntries(dayInstitutionTotal),
+            },
+            caseTypes: {
+              ...Object.fromEntries(dayCasetypeTotal),
+            },
+          };
+          const nowYear = new Date().getFullYear();
+          const currentDataYear = i.split("-")[0];
+          const previousChangeYear =
+            previousChange && previousChange.date.split("-")[0];
+          if (nowYear == currentDataYear && nowYear == previousChangeYear) {
+            for (const ct of Object.keys(caseTypeChartData)) {
+              caseTypeChartData[ct].labels.push(i);
+              for (
+                let dsIndex = 0;
+                dsIndex < caseTypeChartData[ct].datasets.length;
+                dsIndex++
+              ) {
+                const dm = caseTypeChartData[ct].datasets[dsIndex].label;
+                let oldValue = 0;
+                if (
+                  previousChange.caseTypes.hasOwnProperty(ct) &&
+                  previousChange.caseTypes[ct].decisions.hasOwnProperty(dm)
+                ) {
+                  oldValue = previousChange.caseTypes[ct].decisions[dm];
+                }
+
+                let newValue = 0;
+                if (
+                  lastChange.caseTypes.hasOwnProperty(ct) &&
+                  lastChange.caseTypes[ct].decisions.hasOwnProperty(dm)
+                ) {
+                  newValue = lastChange.caseTypes[ct].decisions[dm];
+                }
+                caseTypeChartData[ct].datasets[dsIndex].data.push(
+                  newValue - oldValue
+                );
+              }
+            }
+          }
         }
       }
+      const date_1 = new Date();
+      const date_2 = new Date(lastChange.date);
+      const date_3 = new Date(previousChange.date);
+      let difference1 = date_1.getTime() - date_2.getTime();
+      let difference2 = date_2.getTime() - date_3.getTime();
+      let TotalDays1 = Math.ceil(difference1 / (1000 * 3600 * 24));
+      let TotalDays2 = Math.ceil(difference2 / (1000 * 3600 * 24));
 
-      $("#decisionsTable").bootstrapTable({
-        data: tableData,
-        rowStyle: rowStyle,
+      document.getElementById("lastChange").innerText =
+        "Последние обновление произошло " +
+        daysDeclensionRus(TotalDays1) +
+        " назад " +
+        lastChange.date +
+        ", перед этим обновление было " +
+        daysDeclensionRus(TotalDays2) +
+        " ранее " +
+        previousChange.date;
+
+      const getTotalStatusHtml = (l, p, caseType) => {
+        const lastChangeCaseType = l.caseTypes[caseType];
+        const previousChangeCaseType = p.caseTypes[caseType];
+        return `<h5>${caseType}</h5>
+        Новых решений
+        <strong>${
+          lastChangeCaseType.total - previousChangeCaseType.total
+        }</strong>
+        , из них
+        <strong style="color: green">${
+          lastChangeCaseType.decisions["Pozytywna"] -
+          previousChangeCaseType.decisions["Pozytywna"]
+        }</strong>
+        положительных,
+        <strong style="color: red">${
+          lastChangeCaseType.decisions["Negatywna"] -
+          previousChangeCaseType.decisions["Negatywna"]
+        }</strong>
+        отрицательных и
+        <strong style="color: blue">${
+          lastChangeCaseType.decisions["Umorzenie"] -
+          previousChangeCaseType.decisions["Umorzenie"]
+        }</strong>
+        прекращённых`;
+      };
+      let lastChangeCaseType = lastChange.caseTypes["Pobyt czasowy"];
+      let previousChangeCaseType = previousChange.caseTypes["Pobyt czasowy"];
+      document.getElementById("TRP").innerHTML =
+        getTotalStatusHtml(lastChange, previousChange, "Pobyt czasowy") +
+        '<br /><canvas id="TRP-chart" width="700" height="400"></canvas>';
+
+      let ctx = document.getElementById("TRP-chart").getContext("2d");
+      new Chart(ctx, {
+        type: "line",
+        data: caseTypeChartData["Pobyt czasowy"],
+        options: {
+          responsive: true,
+          plugins: {
+            legend: {
+              position: "top",
+            },
+          },
+        },
       });
 
-      $("#decisionsTable").on("post-body.bs.table", function () {
-        const localData = $("#decisionsTable").bootstrapTable("getData", {
-          useCurrentPage: true,
-        });
-        let currentDateIndex = 0;
-        let currentInstitutionIndex = 0;
-        let currentCaseTypeIndex = 0;
-        for (let index = 1; index < localData.length; index++) {
-          const element = localData[index];
-          if (index === localData.length - 1) {
-            if (element.day === localData[currentDateIndex].day) {
-              let dateSpan = index - currentDateIndex + 1;
-              if (dateSpan > 1) {
-                $("#decisionsTable").bootstrapTable("mergeCells", {
-                  index: currentDateIndex,
-                  field: "day",
-                  rowspan: dateSpan,
-                });
-              }
-              if (
-                element.institution ===
-                localData[currentInstitutionIndex].institution
-              ) {
-                let instSpan = index - currentInstitutionIndex + 1;
-                if (instSpan > 1) {
-                  $("#decisionsTable").bootstrapTable("mergeCells", {
-                    index: currentInstitutionIndex,
-                    field: "institution",
-                    rowspan: instSpan,
-                  });
-                }
-                if (
-                  element.caseType === localData[currentCaseTypeIndex].caseType
-                ) {
-                  let caseTypeSpan = index - currentCaseTypeIndex + 1;
-                  if (caseTypeSpan > 1) {
-                    $("#decisionsTable").bootstrapTable("mergeCells", {
-                      index: currentCaseTypeIndex,
-                      field: "caseType",
-                      rowspan: caseTypeSpan,
-                    });
-                  }
-                }
-              }
-            }
-          }
-          if (element.day !== localData[currentDateIndex].day) {
-            let dateSpan = index - currentDateIndex;
-            if (dateSpan > 1) {
-              $("#decisionsTable").bootstrapTable("mergeCells", {
-                index: currentDateIndex,
-                field: "day",
-                rowspan: dateSpan,
-              });
-            }
-            let instSpan = index - currentInstitutionIndex;
-            if (instSpan > 1) {
-              $("#decisionsTable").bootstrapTable("mergeCells", {
-                index: currentInstitutionIndex,
-                field: "institution",
-                rowspan: instSpan,
-              });
-            }
-            let caseTypeSpan = index - currentCaseTypeIndex;
-            if (caseTypeSpan > 1) {
-              $("#decisionsTable").bootstrapTable("mergeCells", {
-                index: currentCaseTypeIndex,
-                field: "caseType",
-                rowspan: caseTypeSpan,
-              });
-            }
-            currentInstitutionIndex = index;
-            currentDateIndex = index;
-            currentCaseTypeIndex = index;
-          }
-          if (
-            element.institution !==
-            localData[currentInstitutionIndex].institution
-          ) {
-            let instSpan = index - currentInstitutionIndex;
-            if (instSpan > 1) {
-              $("#decisionsTable").bootstrapTable("mergeCells", {
-                index: currentInstitutionIndex,
-                field: "institution",
-                rowspan: instSpan,
-              });
-            }
-            let caseTypeSpan = index - currentCaseTypeIndex;
-            if (caseTypeSpan > 1) {
-              $("#decisionsTable").bootstrapTable("mergeCells", {
-                index: currentCaseTypeIndex,
-                field: "caseType",
-                rowspan: caseTypeSpan,
-              });
-            }
-            currentInstitutionIndex = index;
-            currentCaseTypeIndex = index;
-          }
-          if (element.caseType !== localData[currentCaseTypeIndex].caseType) {
-            let caseTypeSpan = index - currentCaseTypeIndex;
-            if (caseTypeSpan > 1) {
-              $("#decisionsTable").bootstrapTable("mergeCells", {
-                index: currentCaseTypeIndex,
-                field: "caseType",
-                rowspan: caseTypeSpan,
-              });
-            }
-            currentCaseTypeIndex = index;
-          }
-        }
+      lastChangeCaseType = lastChange.caseTypes["Pobyt sta\u0142y"];
+      previousChangeCaseType = previousChange.caseTypes["Pobyt sta\u0142y"];
+      document.getElementById("PRP").innerHTML =
+        getTotalStatusHtml(lastChange, previousChange, "Pobyt sta\u0142y") +
+        '<br /><canvas id="PRP-chart" width="700" height="400"></canvas>';
+
+      ctx = document.getElementById("PRP-chart").getContext("2d");
+      new Chart(ctx, {
+        type: "line",
+        data: caseTypeChartData["Pobyt sta\u0142y"],
+        options: {
+          responsive: true,
+          plugins: {
+            legend: {
+              position: "top",
+            },
+          },
+        },
+      });
+
+      document.getElementById("EULTRP").innerHTML =
+        getTotalStatusHtml(
+          lastChange,
+          previousChange,
+          "Pobyt rezydenta d\u0142ugoterminowego UE"
+        ) +
+        '<br /><canvas id="EULTRP-chart" width="700" height="400"></canvas>';
+
+      ctx = document.getElementById("EULTRP-chart").getContext("2d");
+      new Chart(ctx, {
+        type: "line",
+        data: caseTypeChartData["Pobyt rezydenta d\u0142ugoterminowego UE"],
+        options: {
+          responsive: true,
+          plugins: {
+            legend: {
+              position: "top",
+            },
+          },
+        },
+      });
+
+      document.getElementById("IP").innerHTML =
+        getTotalStatusHtml(
+          lastChange,
+          previousChange,
+          "Ochrona mi\u0119dzynarodowa"
+        ) + '<br /><canvas id="IP-chart" width="700" height="400"></canvas>';
+
+      ctx = document.getElementById("IP-chart").getContext("2d");
+      new Chart(ctx, {
+        type: "line",
+        data: caseTypeChartData["Ochrona mi\u0119dzynarodowa"],
+        options: {
+          responsive: true,
+          plugins: {
+            legend: {
+              position: "top",
+            },
+          },
+        },
       });
     </script>
   </body>

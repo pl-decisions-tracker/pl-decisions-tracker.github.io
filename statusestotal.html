@@ -44,7 +44,10 @@
           >
             <ul class="navbar-nav" id="navbarNav">
               <li class="nav-item">
-                <a class="nav-link" href="/">Decisions</a>
+                <a class="nav-link" href="/">Main</a>
+              </li>
+              <li class="nav-item">
+                <a class="nav-link" href="decisions.html">Decisions</a>
               </li>
               <li class="nav-item">
                 <a class="nav-link" href="applications.html">Applications</a>
@@ -116,7 +119,6 @@
 
       let tableData = [];
       for (const day of Object.keys(statusesJson)) {
-        // let firstDateOccurance = true;
         let dateSum = 0;
         statusesJson[day].sort((a, b) => {
           return parseInt(a.status) - parseInt(b.status);
@@ -181,27 +183,6 @@
               }
               currentDateIndex = index;
             }
-            // if (element.hasOwnProperty("grandTotal")) {
-            //   let rowSpan = 1;
-            //   while (
-            //     index + rowSpan < localData.length &&
-            //     !localData[index + rowSpan].hasOwnProperty("grandTotal")
-            //   ) {
-            //     rowSpan++;
-            //   }
-            //   if (rowSpan !== 1) {
-            //     $("#statusesTable").bootstrapTable("mergeCells", {
-            //       index: index,
-            //       field: "grandTotal",
-            //       rowspan: rowSpan,
-            //     });
-            //     $("#statusesTable").bootstrapTable("mergeCells", {
-            //       index: index,
-            //       field: "day",
-            //       rowspan: rowSpan,
-            //     });
-            //   }
-            // }
           }
         });
       });
