@@ -73,10 +73,34 @@
     <p>Обновление происходит ежедневно в 23:00</p>
     <p id="lastChange"></p>
     <div class="d-flex flex-wrap">
-      <div id="TRP" class="p-2"></div>
-      <div id="PRP" class="p-2"></div>
-      <div id="EULTRP" class="p-2"></div>
-      <div id="IP" class="p-2"></div>
+      <div class="p-2">
+        <div id="TRP" class="p-2"></div>
+        <br />
+        <canvas id="TRP-chart" width="700" height="400"></canvas>
+        <br />
+        <div id="TRP-inst" class="p-2"></div>
+      </div>
+      <div class="p-2">
+        <div id="PRP" class="p-2"></div>
+        <br />
+        <canvas id="PRP-chart" width="700" height="400"></canvas>
+        <br />
+        <div id="PRP-inst" class="p-2"></div>
+      </div>
+      <div class="p-2">
+        <div id="EULTRP" class="p-2"></div>
+        <br />
+        <canvas id="EULTRP-chart" width="700" height="400"></canvas>
+        <br />
+        <div id="EULTRP-inst" class="p-2"></div>
+      </div>
+      <div class="p-2">
+        <div id="IP" class="p-2"></div>
+        <br />
+        <canvas id="IP-chart" width="700" height="400"></canvas>
+        <br />
+        <div id="IP-inst" class="p-2"></div>
+      </div>
     </div>
     <script
       src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.0/dist/js/bootstrap.bundle.min.js"
@@ -127,7 +151,7 @@
 
       let previousChange = null;
       let lastChange = null;
-      let caseTypeChartData = {
+      const chartDataTemplate = {
         "Ochrona mi\u0119dzynarodowa": {
           labels: [],
           datasets: [
@@ -227,6 +251,8 @@
           ],
         },
       };
+      let caseTypeChartData = JSON.parse(JSON.stringify(chartDataTemplate));
+      let institutionsChartData = {};
       for (let i of Object.keys(decisionsJson).sort()) {
         const dayRecord = decisionsJson[i];
         dayRecord.sort((a, b) => {
@@ -279,6 +305,7 @@
           } else {
             dayInstitutionTotal.set(dayInstitutionTotalKey, {
               total: institutionRecord.total,
+              id: institutionRecord.institution,
               caseTypes: {
                 [caseTypeName]: {
                   total: institutionRecord.total,
@@ -354,6 +381,54 @@
                 );
               }
             }
+            for (const inst of Object.keys(lastChange.institutions)) {
+              if (!institutionsChartData.hasOwnProperty(inst)) {
+                institutionsChartData[inst] = JSON.parse(
+                  JSON.stringify(chartDataTemplate)
+                );
+              }
+              for (const ct of Object.keys(institutionsChartData[inst])) {
+                institutionsChartData[inst][ct].labels.push(i);
+                for (
+                  let dsIndex = 0;
+                  dsIndex < institutionsChartData[inst][ct].datasets.length;
+                  dsIndex++
+                ) {
+                  const dm =
+                    institutionsChartData[inst][ct].datasets[dsIndex].label;
+                  let oldValue = 0;
+                  if (
+                    previousChange.institutions[inst].caseTypes.hasOwnProperty(
+                      ct
+                    ) &&
+                    previousChange.institutions[inst].caseTypes[
+                      ct
+                    ].decisions.hasOwnProperty(dm)
+                  ) {
+                    oldValue =
+                      previousChange.institutions[inst].caseTypes[ct].decisions[
+                        dm
+                      ];
+                  }
+
+                  let newValue = 0;
+                  if (
+                    lastChange.institutions[inst].caseTypes.hasOwnProperty(
+                      ct
+                    ) &&
+                    lastChange.institutions[inst].caseTypes[
+                      ct
+                    ].decisions.hasOwnProperty(dm)
+                  ) {
+                    newValue =
+                      lastChange.institutions[inst].caseTypes[ct].decisions[dm];
+                  }
+                  institutionsChartData[inst][ct].datasets[dsIndex].data.push(
+                    newValue - oldValue
+                  );
+                }
+              }
+            }
           }
         }
       }
@@ -375,113 +450,131 @@
         " ранее " +
         previousChange.date;
 
-      const getTotalStatusHtml = (l, p, caseType) => {
-        const lastChangeCaseType = l.caseTypes[caseType];
-        const previousChangeCaseType = p.caseTypes[caseType];
-        return `<h5>${caseType}</h5>
+      const getTotalStatusHtml = (l, p, title) => {
+        const lastChangeCaseType = l;
+        const previousChangeCaseType = p;
+        return `<h5>${title}</h5>
         Новых решений
         <strong>${
           lastChangeCaseType.total - previousChangeCaseType.total
         }</strong>
         , из них
         <strong style="color: green">${
-          lastChangeCaseType.decisions["Pozytywna"] -
-          previousChangeCaseType.decisions["Pozytywna"]
+          (lastChangeCaseType.decisions["Pozytywna"] || 0) -
+          (previousChangeCaseType.decisions["Pozytywna"] || 0)
         }</strong>
         положительных,
         <strong style="color: red">${
-          lastChangeCaseType.decisions["Negatywna"] -
-          previousChangeCaseType.decisions["Negatywna"]
+          (lastChangeCaseType.decisions["Negatywna"] || 0) -
+          (previousChangeCaseType.decisions["Negatywna"] || 0)
         }</strong>
         отрицательных и
         <strong style="color: blue">${
-          lastChangeCaseType.decisions["Umorzenie"] -
-          previousChangeCaseType.decisions["Umorzenie"]
+          (lastChangeCaseType.decisions["Umorzenie"] || 0) -
+          (previousChangeCaseType.decisions["Umorzenie"] || 0)
         }</strong>
         прекращённых`;
       };
-      let lastChangeCaseType = lastChange.caseTypes["Pobyt czasowy"];
-      let previousChangeCaseType = previousChange.caseTypes["Pobyt czasowy"];
-      document.getElementById("TRP").innerHTML =
-        getTotalStatusHtml(lastChange, previousChange, "Pobyt czasowy") +
-        '<br /><canvas id="TRP-chart" width="700" height="400"></canvas>';
 
-      let ctx = document.getElementById("TRP-chart").getContext("2d");
-      new Chart(ctx, {
-        type: "line",
-        data: caseTypeChartData["Pobyt czasowy"],
-        options: {
-          responsive: true,
-          plugins: {
-            legend: {
-              position: "top",
+      const displayCases = {
+        TRP: "Pobyt czasowy",
+        PRP: "Pobyt sta\u0142y",
+        EULTRP: "Pobyt rezydenta d\u0142ugoterminowego UE",
+        IP: "Ochrona mi\u0119dzynarodowa",
+      };
+
+      for (let currentCaseId of Object.keys(displayCases)) {
+        let lastChangeCaseType =
+          lastChange.caseTypes[displayCases[currentCaseId]];
+        let previousChangeCaseType =
+          previousChange.caseTypes[displayCases[currentCaseId]];
+        document.getElementById(`${currentCaseId}`).innerHTML =
+          getTotalStatusHtml(
+            lastChangeCaseType,
+            previousChangeCaseType,
+            displayCases[currentCaseId]
+          );
+
+        let ctx = document
+          .getElementById(`${currentCaseId}-chart`)
+          .getContext("2d");
+        new Chart(ctx, {
+          type: "line",
+          data: caseTypeChartData[displayCases[currentCaseId]],
+          options: {
+            responsive: true,
+            plugins: {
+              legend: {
+                position: "top",
+              },
             },
           },
-        },
-      });
+        });
+        let instsDiv = document.getElementById(`${currentCaseId}-inst`);
+        for (const inst of Object.keys(lastChange.institutions)) {
+          if (
+            lastChange.institutions[inst].caseTypes.hasOwnProperty(
+              displayCases[currentCaseId]
+            )
+          ) {
+            const lastChangeInstDecisions =
+              lastChange.institutions[inst].caseTypes[
+                displayCases[currentCaseId]
+              ];
+            let previousChangeInstDecisions;
+            if (
+              previousChange &&
+              previousChange.institutions &&
+              previousChange.institutions[inst] &&
+              previousChange.institutions[inst].caseTypes &&
+              previousChange.institutions[inst].caseTypes[
+                displayCases[currentCaseId]
+              ]
+            ) {
+              previousChangeInstDecisions =
+                previousChange.institutions[inst].caseTypes[
+                  displayCases[currentCaseId]
+                ];
+            } else {
+              previousChangeInstDecisions = {
+                decisions: {},
+              };
+            }
 
-      lastChangeCaseType = lastChange.caseTypes["Pobyt sta\u0142y"];
-      previousChangeCaseType = previousChange.caseTypes["Pobyt sta\u0142y"];
-      document.getElementById("PRP").innerHTML =
-        getTotalStatusHtml(lastChange, previousChange, "Pobyt sta\u0142y") +
-        '<br /><canvas id="PRP-chart" width="700" height="400"></canvas>';
+            // TODO: make a parend div with id like "TRP-inst-856" and put everything there
+            let template = document.createElement("template");
+            template.innerHTML = getTotalStatusHtml(
+              lastChangeInstDecisions,
+              previousChangeInstDecisions,
+              inst
+            ).trim();
+            instsDiv.appendChild(template.content.cloneNode(true));
+            template.innerHTML = `
+  <button class="btn btn-primary" type="button" data-bs-toggle="collapse" data-bs-target="#${currentCaseId}-inst-${lastChange.institutions[inst].id}-chart-container" aria-expanded="false" aria-controls="${currentCaseId}-inst-${lastChange.institutions[inst].id}-chart-container">
+    Chart
+  </button>
+<br />
+              <div id="${currentCaseId}-inst-${lastChange.institutions[inst].id}-chart-container" class="collapse" ><canvas id="${currentCaseId}-inst-${lastChange.institutions[inst].id}-chart" width="700" height="400"></canvas></div>`;
+            instsDiv.appendChild(template.content.cloneNode(true));
 
-      ctx = document.getElementById("PRP-chart").getContext("2d");
-      new Chart(ctx, {
-        type: "line",
-        data: caseTypeChartData["Pobyt sta\u0142y"],
-        options: {
-          responsive: true,
-          plugins: {
-            legend: {
-              position: "top",
-            },
-          },
-        },
-      });
-
-      document.getElementById("EULTRP").innerHTML =
-        getTotalStatusHtml(
-          lastChange,
-          previousChange,
-          "Pobyt rezydenta d\u0142ugoterminowego UE"
-        ) +
-        '<br /><canvas id="EULTRP-chart" width="700" height="400"></canvas>';
-
-      ctx = document.getElementById("EULTRP-chart").getContext("2d");
-      new Chart(ctx, {
-        type: "line",
-        data: caseTypeChartData["Pobyt rezydenta d\u0142ugoterminowego UE"],
-        options: {
-          responsive: true,
-          plugins: {
-            legend: {
-              position: "top",
-            },
-          },
-        },
-      });
-
-      document.getElementById("IP").innerHTML =
-        getTotalStatusHtml(
-          lastChange,
-          previousChange,
-          "Ochrona mi\u0119dzynarodowa"
-        ) + '<br /><canvas id="IP-chart" width="700" height="400"></canvas>';
-
-      ctx = document.getElementById("IP-chart").getContext("2d");
-      new Chart(ctx, {
-        type: "line",
-        data: caseTypeChartData["Ochrona mi\u0119dzynarodowa"],
-        options: {
-          responsive: true,
-          plugins: {
-            legend: {
-              position: "top",
-            },
-          },
-        },
-      });
+            let instChart = document
+              .getElementById(`${currentCaseId}-inst-${lastChange.institutions[inst].id}-chart`)
+              .getContext("2d");
+            new Chart(instChart, {
+              type: "line",
+              data: institutionsChartData[inst][displayCases[currentCaseId]],
+              options: {
+                responsive: true,
+                plugins: {
+                  legend: {
+                    position: "top",
+                  },
+                },
+              },
+            });
+          }
+        }
+      }
     </script>
   </body>
 </html>
