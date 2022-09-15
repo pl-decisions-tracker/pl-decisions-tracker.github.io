@@ -613,6 +613,13 @@
     "Новых решений",
     5
   ).trim()}
+  <button class="btn btn-primary" type="button" data-bs-toggle="collapse" data-bs-target="#${currentCaseId}-inst-${
+              lastChange.institutions[inst].id
+            }-chart-container" aria-expanded="false" aria-controls="${currentCaseId}-inst-${
+              lastChange.institutions[inst].id
+            }-chart-container">
+    Chart
+  </button>
   <br/>
   ${getTotalStatusHtml(
     lastChangeInstDecisions,
@@ -621,13 +628,6 @@
     "С начала наблюдений ",
     null
   )}
-  <button class="btn btn-primary" type="button" data-bs-toggle="collapse" data-bs-target="#${currentCaseId}-inst-${
-              lastChange.institutions[inst].id
-            }-chart-container" aria-expanded="false" aria-controls="${currentCaseId}-inst-${
-              lastChange.institutions[inst].id
-            }-chart-container">
-    Chart
-  </button>
   <br />
   <div id="${currentCaseId}-inst-${
               lastChange.institutions[inst].id
