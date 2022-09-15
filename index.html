@@ -70,6 +70,7 @@
         </div>
       </div>
     </nav>
+    <p>Наблюдение ведётся с 2022-08-10</p>
     <p>Обновление происходит ежедневно в 23:00</p>
     <p id="lastChange"></p>
     <div class="d-flex flex-wrap">
@@ -132,25 +133,24 @@
             throw new Error(`Unknown number '${num}'!`);
         }
       };
-
-      const [
-        { value: decisionsJsonFetchResult },
-        { value: institutionsFetchResult },
-        { value: caseTypesFetchResult },
-        { value: decisionMarkersFetchResult },
-      ] = await Promise.allSettled([
-        fetch("./decisions.json"),
-        fetch("./institution.json"),
-        fetch("./caseType.json"),
-        fetch("./decisionMarker.json"),
-      ]);
-      const decisionsJson = await decisionsJsonFetchResult.json();
-      const institutions = await institutionsFetchResult.json();
-      const caseTypes = await caseTypesFetchResult.json();
-      const decisionMarkers = await decisionMarkersFetchResult.json();
-
-      let previousChange = null;
-      let lastChange = null;
+      const daysDeclensionRus2 = (num) => {
+        switch (num % 10) {
+          case 1:
+            return `${num} днём`;
+          case 2:
+          case 3:
+          case 4:
+          case 5:
+          case 6:
+          case 7:
+          case 8:
+          case 9:
+          case 0:
+            return `${num} днями`;
+          default:
+            throw new Error(`Unknown number '${num}'!`);
+        }
+      };
       const chartDataTemplate = {
         "Ochrona mi\u0119dzynarodowa": {
           labels: [],
@@ -251,6 +251,58 @@
           ],
         },
       };
+      const getTotalStatusHtml = (
+        l,
+        p,
+        title,
+        description,
+        headerLevel = 5
+      ) => {
+        const lastChangeCaseType = l;
+        const previousChangeCaseType = p;
+        return `<h${headerLevel}>${title}</h${headerLevel}>
+        ${description}
+        <strong>${
+          lastChangeCaseType.total - previousChangeCaseType.total
+        }</strong>
+        , из них
+        <strong style="color: green">${
+          (lastChangeCaseType.decisions["Pozytywna"] || 0) -
+          (previousChangeCaseType.decisions["Pozytywna"] || 0)
+        }</strong>
+        положительных,
+        <strong style="color: red">${
+          (lastChangeCaseType.decisions["Negatywna"] || 0) -
+          (previousChangeCaseType.decisions["Negatywna"] || 0)
+        }</strong>
+        отрицательных и
+        <strong style="color: blue">${
+          (lastChangeCaseType.decisions["Umorzenie"] || 0) -
+          (previousChangeCaseType.decisions["Umorzenie"] || 0)
+        }</strong>
+        прекращённых`;
+      };
+
+      const [
+        { value: decisionsJsonFetchResult },
+        { value: institutionsFetchResult },
+        { value: caseTypesFetchResult },
+        { value: decisionMarkersFetchResult },
+      ] = await Promise.allSettled([
+        fetch("./decisions.json"),
+        fetch("./institution.json"),
+        fetch("./caseType.json"),
+        fetch("./decisionMarker.json"),
+      ]);
+      const decisionsJson = await decisionsJsonFetchResult.json();
+      const institutions = await institutionsFetchResult.json();
+      const caseTypes = await caseTypesFetchResult.json();
+      const decisionMarkers = await decisionMarkersFetchResult.json();
+
+      let firstDataPoint = null;
+      let previousChange = null;
+      let lastChange = null;
+
       let caseTypeChartData = JSON.parse(JSON.stringify(chartDataTemplate));
       let institutionsChartData = {};
       for (let i of Object.keys(decisionsJson).sort()) {
@@ -336,6 +388,10 @@
             });
           }
         }
+        const nowYear = new Date().getFullYear();
+        const currentDataYear = i.split("-")[0];
+        const previousChangeYear =
+          previousChange && previousChange.date.split("-")[0];
         if (lastChange?.total !== dayTotal) {
           previousChange = lastChange;
           lastChange = {
@@ -348,10 +404,6 @@
               ...Object.fromEntries(dayCasetypeTotal),
             },
           };
-          const nowYear = new Date().getFullYear();
-          const currentDataYear = i.split("-")[0];
-          const previousChangeYear =
-            previousChange && previousChange.date.split("-")[0];
           if (nowYear == currentDataYear && nowYear == previousChangeYear) {
             for (const ct of Object.keys(caseTypeChartData)) {
               caseTypeChartData[ct].labels.push(i);
@@ -431,14 +483,17 @@
             }
           }
         }
+        if (nowYear == currentDataYear && firstDataPoint === null) {
+          firstDataPoint = lastChange;
+        }
       }
       const date_1 = new Date();
       const date_2 = new Date(lastChange.date);
       const date_3 = new Date(previousChange.date);
       let difference1 = date_1.getTime() - date_2.getTime();
       let difference2 = date_2.getTime() - date_3.getTime();
-      let TotalDays1 = Math.ceil(difference1 / (1000 * 3600 * 24));
-      let TotalDays2 = Math.ceil(difference2 / (1000 * 3600 * 24));
+      let TotalDays1 = Math.floor(difference1 / (1000 * 3600 * 24));
+      let TotalDays2 = Math.floor(difference2 / (1000 * 3600 * 24));
 
       document.getElementById("lastChange").innerText =
         "Последние обновление произошло " +
@@ -446,35 +501,9 @@
         " назад " +
         lastChange.date +
         ", перед этим обновление было " +
-        daysDeclensionRus(TotalDays2) +
+        daysDeclensionRus2(TotalDays2) +
         " ранее " +
         previousChange.date;
-
-      const getTotalStatusHtml = (l, p, title) => {
-        const lastChangeCaseType = l;
-        const previousChangeCaseType = p;
-        return `<h5>${title}</h5>
-        Новых решений
-        <strong>${
-          lastChangeCaseType.total - previousChangeCaseType.total
-        }</strong>
-        , из них
-        <strong style="color: green">${
-          (lastChangeCaseType.decisions["Pozytywna"] || 0) -
-          (previousChangeCaseType.decisions["Pozytywna"] || 0)
-        }</strong>
-        положительных,
-        <strong style="color: red">${
-          (lastChangeCaseType.decisions["Negatywna"] || 0) -
-          (previousChangeCaseType.decisions["Negatywna"] || 0)
-        }</strong>
-        отрицательных и
-        <strong style="color: blue">${
-          (lastChangeCaseType.decisions["Umorzenie"] || 0) -
-          (previousChangeCaseType.decisions["Umorzenie"] || 0)
-        }</strong>
-        прекращённых`;
-      };
 
       const displayCases = {
         TRP: "Pobyt czasowy",
@@ -488,12 +517,25 @@
           lastChange.caseTypes[displayCases[currentCaseId]];
         let previousChangeCaseType =
           previousChange.caseTypes[displayCases[currentCaseId]];
-        document.getElementById(`${currentCaseId}`).innerHTML =
-          getTotalStatusHtml(
+        let firstObservationCaseType =
+          firstDataPoint.caseTypes[displayCases[currentCaseId]];
+        document.getElementById(
+          `${currentCaseId}`
+        ).innerHTML = `${getTotalStatusHtml(
+          lastChangeCaseType,
+          previousChangeCaseType,
+          displayCases[currentCaseId],
+          "Новых решений",
+          3
+        )}
+          <br/>
+          ${getTotalStatusHtml(
             lastChangeCaseType,
-            previousChangeCaseType,
-            displayCases[currentCaseId]
-          );
+            firstObservationCaseType,
+            "",
+            "С начала наблюдений ",
+            null
+          )}`;
 
         let ctx = document
           .getElementById(`${currentCaseId}-chart`)
@@ -540,25 +582,67 @@
                 decisions: {},
               };
             }
+            let firstObservationInstDecisions;
+            if (
+              firstDataPoint &&
+              firstDataPoint.institutions &&
+              firstDataPoint.institutions[inst] &&
+              firstDataPoint.institutions[inst].caseTypes &&
+              firstDataPoint.institutions[inst].caseTypes[
+                displayCases[currentCaseId]
+              ]
+            ) {
+              firstObservationInstDecisions =
+                firstDataPoint.institutions[inst].caseTypes[
+                  displayCases[currentCaseId]
+                ];
+            } else {
+              firstObservationInstDecisions = {
+                decisions: {},
+              };
+            }
 
             // TODO: make a parend div with id like "TRP-inst-856" and put everything there
             let template = document.createElement("template");
-            template.innerHTML = getTotalStatusHtml(
-              lastChangeInstDecisions,
-              previousChangeInstDecisions,
-              inst
-            ).trim();
-            instsDiv.appendChild(template.content.cloneNode(true));
             template.innerHTML = `
-  <button class="btn btn-primary" type="button" data-bs-toggle="collapse" data-bs-target="#${currentCaseId}-inst-${lastChange.institutions[inst].id}-chart-container" aria-expanded="false" aria-controls="${currentCaseId}-inst-${lastChange.institutions[inst].id}-chart-container">
+<div id="${currentCaseId}-inst-${lastChange.institutions[inst].id}">
+  ${getTotalStatusHtml(
+    lastChangeInstDecisions,
+    previousChangeInstDecisions,
+    inst,
+    "Новых решений",
+    5
+  ).trim()}
+  <br/>
+  ${getTotalStatusHtml(
+    lastChangeInstDecisions,
+    firstObservationInstDecisions,
+    "",
+    "С начала наблюдений ",
+    null
+  )}
+  <button class="btn btn-primary" type="button" data-bs-toggle="collapse" data-bs-target="#${currentCaseId}-inst-${
+              lastChange.institutions[inst].id
+            }-chart-container" aria-expanded="false" aria-controls="${currentCaseId}-inst-${
+              lastChange.institutions[inst].id
+            }-chart-container">
     Chart
   </button>
-<br />
-              <div id="${currentCaseId}-inst-${lastChange.institutions[inst].id}-chart-container" class="collapse" ><canvas id="${currentCaseId}-inst-${lastChange.institutions[inst].id}-chart" width="700" height="400"></canvas></div>`;
+  <br />
+  <div id="${currentCaseId}-inst-${
+              lastChange.institutions[inst].id
+            }-chart-container" class="collapse" >
+    <canvas id="${currentCaseId}-inst-${
+              lastChange.institutions[inst].id
+            }-chart" width="700" height="400"></canvas>
+  </div>
+</div>`;
             instsDiv.appendChild(template.content.cloneNode(true));
 
             let instChart = document
-              .getElementById(`${currentCaseId}-inst-${lastChange.institutions[inst].id}-chart`)
+              .getElementById(
+                `${currentCaseId}-inst-${lastChange.institutions[inst].id}-chart`
+              )
               .getContext("2d");
             new Chart(instChart, {
               type: "line",
