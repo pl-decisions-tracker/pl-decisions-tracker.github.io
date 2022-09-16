@@ -393,10 +393,10 @@
         }
         const nowYear = new Date().getFullYear();
         const currentDataYear = i.split("-")[0];
-        const previousChangeYear =
-          previousChange && previousChange.date.split("-")[0];
         if (lastChange?.total !== dayTotal) {
           previousChange = lastChange;
+          const previousChangeYear =
+            previousChange && previousChange.date.split("-")[0];
           lastChange = {
             date: i,
             total: dayTotal,
