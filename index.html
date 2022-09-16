@@ -113,6 +113,9 @@
       integrity="sha256-+8RZJua0aEWg+QVVKg4LEzEEm/8RFez5Tb4JBNiV5xA="
       crossorigin="anonymous"
     ></script>
+    <script src="https://cdn.jsdelivr.net/npm/moment@2.27.0"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-moment@0.1.1"></script>
+
     <script type="module">
       const daysDeclensionRus = (num) => {
         switch (num % 10) {
@@ -550,6 +553,11 @@
                 position: "top",
               },
             },
+            scales: {
+              x: {
+                type: "time",
+              },
+            },
           },
         });
         let instsDiv = document.getElementById(`${currentCaseId}-inst`);
@@ -652,6 +660,11 @@
                 plugins: {
                   legend: {
                     position: "top",
+                  },
+                },
+                scales: {
+                  x: {
+                    type: "time",
                   },
                 },
               },
