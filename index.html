@@ -71,7 +71,11 @@
       </div>
     </nav>
     <p>Наблюдение ведётся с 2022-08-10</p>
-    <p>Обновление данного трекера происходит ежедневно в 23:00, однако управление по делам иностранцев предоставляет данные только несколько раз в месяц в произвольные даты</p>
+    <p>
+      Обновление данного трекера происходит ежедневно приблизительно в
+      <span id="updateHour">23</span>:05, однако управление по делам иностранцев
+      обновляет свои данные только несколько раз в месяц в произвольные даты
+    </p>
     <p id="lastChange"></p>
     <div class="d-flex flex-wrap">
       <div class="p-2">
@@ -117,7 +121,13 @@
     <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-moment@0.1.1"></script>
 
     <script type="module">
+      const localUpdateStamp = new Date("1 21:00 UTC");
+      document.getElementById("updateHour").innerText =
+        localUpdateStamp.getHours();
       const daysDeclensionRus = (num) => {
+        if (Math.floor((num % 100) / 10) === 1) {
+          return `${num} дней`;
+        }
         switch (num % 10) {
           case 1:
             return `${num} день`;
