@@ -125,6 +125,11 @@
       localUpdateStamp.setUTCHours(21);
       document.getElementById("updateHour").innerText =
         localUpdateStamp.getHours();
+      let canvasWidth = Math.min(window.outerWidth, 700);
+      const staticCanvases = document.getElementsByTagName("canvas");
+      for (const c of staticCanvases) {
+        c.width = canvasWidth;
+      }
       const daysDeclensionRus = (num) => {
         if (Math.floor((num % 100) / 10) === 1) {
           return `${num} дней`;
@@ -653,7 +658,7 @@
             }-chart-container" class="collapse" >
     <canvas id="${currentCaseId}-inst-${
               lastChange.institutions[inst].id
-            }-chart" width="700" height="400"></canvas>
+            }-chart" width="${canvasWidth}" height="400"></canvas>
   </div>
 </div>`;
             instsDiv.appendChild(template.content.cloneNode(true));
