@@ -125,9 +125,12 @@
       localUpdateStamp.setUTCHours(21);
       document.getElementById("updateHour").innerText =
         localUpdateStamp.getHours();
-      let canvasWidth = Math.min(window.outerWidth, 700);
+      let originalCanvasWidth = Math.min(window.outerWidth, 700);
+      let canvasWidth = originalCanvasWidth;
       const staticCanvases = document.getElementsByTagName("canvas");
       for (const c of staticCanvases) {
+        const style = window.getComputedStyle(c.parentElement)
+        canvasWidth = originalCanvasWidth - parseInt(style.getPropertyValue('padding-left'), 10) - parseInt(style.getPropertyValue('padding-right'), 10);
         c.width = canvasWidth;
       }
       const daysDeclensionRus = (num) => {
