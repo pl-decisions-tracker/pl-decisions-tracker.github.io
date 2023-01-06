@@ -1,0 +1,21 @@
+{
+  "name": "pl-decisions-tracker.github.io",
+  "version": "1.0.0",
+  "scripts": {
+    "update": "zx updater.mjs"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/pl-decisions-tracker/pl-decisions-tracker.github.io.git"
+  },
+  "author": "pl-decisions-tracker",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/pl-decisions-tracker/pl-decisions-tracker.github.io/issues"
+  },
+  "homepage": "pl-decisions-tracker.github.io",
+  "dependencies": {
+    "sqlite3": "^5.1.4",
+    "zx": "^7.1.1"
+  }
+}
