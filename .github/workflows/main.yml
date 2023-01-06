@@ -30,6 +30,7 @@ jobs:
     - name: Commit and push changes
       run: |-
         git fetch origin
+        git pull origin main
         git diff
         git config user.name "Automated"
         git config user.email "---"
@@ -77,6 +78,7 @@ jobs:
     - name: Commit and push changes
       run: |-
         git fetch origin
+        git pull origin main
         git diff
         git config user.name "Automated"
         git config user.email "---"
