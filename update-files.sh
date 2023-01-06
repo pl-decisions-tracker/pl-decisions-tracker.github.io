@@ -68,4 +68,4 @@ order_by="${suffix}"
 url="https://migracje.gov.pl/wp-json/udscmap/v1/decisions/poland?groupBy=${group_by}&fields=${fields}&orderBy=${order_by}&year=${current_year}"
 echo "${url}"
 curl --insecure --location -H "Accept: application/json" "${url}" >/tmp/healthCheck.json
-jq -r -c --arg today "$currend_date" --slurpfile current_json /tmp/healthCheck.json '. + {($today): $current_json[0][0].total}' healthCheck.json >tmpfile && mv tmpfile healthCheck.json
+jq -r -c --arg today "$currend_date" --slurpfile current_json /tmp/healthCheck.json '. + {($today): ($current_json[0][0] | if type=="array" then 0 else .total end)}' healthCheck.json >tmpfile && mv tmpfile healthCheck.json
