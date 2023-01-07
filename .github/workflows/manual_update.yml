@@ -11,6 +11,7 @@ on:
         required: true
         type: string
 
+jobs:
   sqlite-update:
     runs-on: ubuntu-latest
     steps:
