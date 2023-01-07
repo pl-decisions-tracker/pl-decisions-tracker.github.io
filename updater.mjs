@@ -2,6 +2,9 @@ import "zx/globals";
 
 const sqlite3 = require("sqlite3").verbose();
 
+echo(`year var: $.env.year`)
+exit(1)
+
 const ensureDecisionsTable = (db) => {
   return new Promise((resolve, reject) => {
     db.get(
@@ -147,11 +150,11 @@ const setupTrackerDatabase = (db) => {
 
 const randomSuffix = Math.random().toString(36).slice(2);
 const currentDate = new Date();
-const currentYear = 2023; //currentDate.getFullYear();
-const currentMonth = currentDate.getMonth() + 1;
-const currentDay = currentDate.getDate();
-const currentHour = currentDate.getHours();
-const currentMinute = currentDate.getMinutes();
+const currentYear = $.env.year || currentDate.getFullYear();
+const currentMonth = $.env.year ? 12 : currentDate.getMonth() + 1;
+const currentDay = $.env.year ? 31 : currentDate.getDate();
+const currentHour = $.env.year ? 23 : currentDate.getHours();
+const currentMinute = $.env.year ? 59 : currentDate.getMinutes();
 const sqlLiteConnection = new sqlite3.Database("data/sqlite/tracker.db");
 await setupTrackerDatabase(sqlLiteConnection);
 $.env.NODE_TLS_REJECT_UNAUTHORIZED = 0;
@@ -184,7 +187,7 @@ dateId = await new Promise((resolve, reject) => {
   });
 });
 
-query = `SELECT * FROM updates WHERE dateId <= ${dateId} ORDER BY dateId DESC, year DESC, month DESC, day DESC LIMIT 2`;
+query = `SELECT * FROM updates WHERE dateId <= ${dateId} AND year = ${currentYear} ORDER BY dateId DESC, year DESC, month DESC, day DESC LIMIT 2`;
 const lastCoupleUpdates = await new Promise((resolve, reject) => {
   sqlLiteConnection.all(query, (err, rows) => {
     if (err) {
