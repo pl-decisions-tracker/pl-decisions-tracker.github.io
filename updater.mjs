@@ -147,11 +147,11 @@ const setupTrackerDatabase = (db) => {
 
 const randomSuffix = Math.random().toString(36).slice(2);
 const currentDate = new Date();
-const currentYear = parseInt($.env.YEAR) || currentDate.getFullYear();
-const currentMonth = $.env.YEAR ? 12 : currentDate.getMonth() + 1;
-const currentDay = $.env.YEAR ? 31 : currentDate.getDate();
-const currentHour = $.env.YEAR ? 23 : currentDate.getHours();
-const currentMinute = $.env.YEAR ? 59 : currentDate.getMinutes();
+const currentYear = parseInt($.env.YEAR) || currentDate.getUTCFullYear();
+const currentMonth = $.env.YEAR ? 12 : currentDate.getUTCMonth() + 1;
+const currentDay = $.env.YEAR ? 31 : currentDate.getUTCDate();
+const currentHour = $.env.YEAR ? 23 : currentDate.getUTCHours();
+const currentMinute = $.env.YEAR ? 59 : currentDate.getUTCMinutes();
 const sqlLiteConnection = new sqlite3.Database("data/sqlite/tracker.db");
 await setupTrackerDatabase(sqlLiteConnection);
 $.env.NODE_TLS_REJECT_UNAUTHORIZED = 0;
