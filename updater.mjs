@@ -2,7 +2,7 @@ import "zx/globals";
 
 const sqlite3 = require("sqlite3").verbose();
 
-echo(`year var: $.env.year`)
+echo(`year var: ${$.env.year}`)
 exit(1)
 
 const ensureDecisionsTable = (db) => {
