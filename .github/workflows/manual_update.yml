@@ -13,6 +13,8 @@ on:
 
 jobs:
   sqlite-update:
+    env:
+      YEAR: ${{ github.event.inputs.year }}
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v3

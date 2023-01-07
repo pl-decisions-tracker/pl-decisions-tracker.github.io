@@ -2,7 +2,7 @@ import "zx/globals";
 
 const sqlite3 = require("sqlite3").verbose();
 
-echo(`year var: ${$.env.year}`)
+echo(`year var: ${$.env.YEAR}`)
 exit(1)
 
 const ensureDecisionsTable = (db) => {
@@ -150,11 +150,11 @@ const setupTrackerDatabase = (db) => {
 
 const randomSuffix = Math.random().toString(36).slice(2);
 const currentDate = new Date();
-const currentYear = $.env.year || currentDate.getFullYear();
-const currentMonth = $.env.year ? 12 : currentDate.getMonth() + 1;
-const currentDay = $.env.year ? 31 : currentDate.getDate();
-const currentHour = $.env.year ? 23 : currentDate.getHours();
-const currentMinute = $.env.year ? 59 : currentDate.getMinutes();
+const currentYear = $.env.YEAR || currentDate.getFullYear();
+const currentMonth = $.env.YEAR ? 12 : currentDate.getMonth() + 1;
+const currentDay = $.env.YEAR ? 31 : currentDate.getDate();
+const currentHour = $.env.YEAR ? 23 : currentDate.getHours();
+const currentMinute = $.env.YEAR ? 59 : currentDate.getMinutes();
 const sqlLiteConnection = new sqlite3.Database("data/sqlite/tracker.db");
 await setupTrackerDatabase(sqlLiteConnection);
 $.env.NODE_TLS_REJECT_UNAUTHORIZED = 0;
