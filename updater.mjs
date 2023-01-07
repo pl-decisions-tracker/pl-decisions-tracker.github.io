@@ -2,9 +2,6 @@ import "zx/globals";
 
 const sqlite3 = require("sqlite3").verbose();
 
-echo(`year var: ${$.env.YEAR}`)
-exit(1)
-
 const ensureDecisionsTable = (db) => {
   return new Promise((resolve, reject) => {
     db.get(
@@ -150,7 +147,7 @@ const setupTrackerDatabase = (db) => {
 
 const randomSuffix = Math.random().toString(36).slice(2);
 const currentDate = new Date();
-const currentYear = $.env.YEAR || currentDate.getFullYear();
+const currentYear = parseInt($.env.YEAR) || currentDate.getFullYear();
 const currentMonth = $.env.YEAR ? 12 : currentDate.getMonth() + 1;
 const currentDay = $.env.YEAR ? 31 : currentDate.getDate();
 const currentHour = $.env.YEAR ? 23 : currentDate.getHours();
