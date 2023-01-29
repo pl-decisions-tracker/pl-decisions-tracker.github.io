@@ -87,12 +87,17 @@ const ensureUpdateTypesTable = (db) => {
               if (err) {
                 reject(err);
               } else {
-                //resolve();
-                let query = `INSERT INTO updateTypes (updateTypeId, updateTypeName) VALUES
+                db.run(`INSERT INTO updateTypes (updateTypeId, updateTypeName) VALUES
                 (0, "No data"),
                 (1, "Regular update"),
                 (2, "Initial upadte"),
-                (4, "Year closure")`;
+                (4, "Year closure")`, (err) => {
+                  if(err) {
+                    reject(err);
+                  }else {
+                    resolve();
+                  }
+                });
               }
             }
           );
