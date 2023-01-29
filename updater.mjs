@@ -70,6 +70,40 @@ const ensureUpdatesTable = (db) => {
   });
 };
 
+const ensureUpdateTypesTable = (db) => {
+  return new Promise((resolve, reject) => {
+    db.get(
+      "SELECT name FROM sqlite_master WHERE type='table' AND name='updateTypes'",
+      (err, row) => {
+        if (err) {
+          reject(err);
+        } else if (row === undefined) {
+          db.run(
+            `CREATE TABLE updateTypes (
+            updateTypeId INTEGER PRIMARY KEY,
+            updateTypeName TEXT
+            );`,
+            (err) => {
+              if (err) {
+                reject(err);
+              } else {
+                //resolve();
+                let query = `INSERT INTO updateTypes (updateTypeId, updateTypeName) VALUES
+                (0, "No data"),
+                (1, "Regular update"),
+                (2, "Initial upadte"),
+                (4, "Year closure")`;
+              }
+            }
+          );
+        } else {
+          resolve();
+        }
+      }
+    );
+  });
+};
+
 const ensureStatusesTable = (db) => {
   return new Promise((resolve, reject) => {
     db.get(
@@ -134,13 +168,12 @@ const ensureApplicationsTable = (db) => {
   });
 };
 
-
-
 const setupTrackerDatabase = (db) => {
   return Promise.all([
     ensureDecisionsTable(db),
     ensureUpdatesTable(db),
     ensureStatusesTable(db),
+    ensureUpdateTypesTable(db),
     ensureApplicationsTable(db),
   ]);
 };
@@ -159,6 +192,7 @@ const updatesUrl = `https://migracje.gov.pl/wp-json/udscmap/v1/decisions/poland?
 const updatesData = await fetch(updatesUrl).then((res) => res.json());
 let dateId;
 if (Array.isArray(updatesData[0]) && updatesData[0].length == 0) {
+  // dataUpdated is 0 by default
   let query = `INSERT INTO updates (year, month, day, hour, minute, decisionsTotal) VALUES (${currentYear}, ${currentMonth}, ${currentDay}, ${currentHour}, ${currentMinute}, 0)`;
   dateId = await new Promise((resolve, reject) => {
     sqlLiteConnection.run(query, function (err) {
@@ -205,8 +239,32 @@ if (
   process.exit(0);
 }
 
+// Assumption - no one would update migracje data on 01.01, so we'll get first 0 status
+// then if it was started manually - it is to close year (4)
+// if there were only zeroes before - we have first data of the year (2)
+// otherwise it's just regular update (1)
+let updateType;
+if ($.env.YEAR) {
+  updateType = 4;
+} else {
+  query = `SELECT SUM(DISTINCT dataUpdated) as updateMask FROM updates WHERE year = ${currentYear};`;
+  const yearUpdateMask = await new Promise((resolve, reject) => {
+    sqlLiteConnection.all(query, (err, rows) => {
+      if (err) {
+        reject(err);
+      } else {
+        resolve(rows);
+      }
+    });
+  }).then((rows) => rows[0].updateMask);
+  if (yearUpdateMask === 0) {
+    updateType = 2;
+  } else {
+    updateType = 1;
+  }
+}
 
-query = `UPDATE updates SET dataUpdated = 1 WHERE dateId = ${dateId}`;
+query = `UPDATE updates SET dataUpdated = ${updateType} WHERE dateId = ${dateId}`;
 await new Promise((resolve, reject) => {
   sqlLiteConnection.all(query, (err, rows) => {
     if (err) {
