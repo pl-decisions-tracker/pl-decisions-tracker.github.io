@@ -194,7 +194,7 @@ const ensureCountryTable = (db) => {
         } else if (row === undefined) {
           db.run(
             `CREATE TABLE country (
-            id INTEGER,
+            id INTEGER PRIMARY KEY,
             name TEXT,
             code TEXT
             );`,
@@ -224,7 +224,7 @@ const ensureInstitutionTable = (db) => {
         } else if (row === undefined) {
           db.run(
             `CREATE TABLE institution (
-            id INTEGER,
+            id INTEGER PRIMARY KEY,
             name TEXT
             );`,
             (err) => {
@@ -253,7 +253,7 @@ const ensureCasetypeTable = (db) => {
         } else if (row === undefined) {
           db.run(
             `CREATE TABLE caseType (
-            id INTEGER,
+            id INTEGER PRIMARY KEY,
             type TEXT
             );`,
             (err) => {
@@ -282,7 +282,7 @@ const ensureDecisionmarkerTable = (db) => {
         } else if (row === undefined) {
           db.run(
             `CREATE TABLE decisionMarker (
-            id INTEGER,
+            id INTEGER PRIMARY KEY,
             description TEXT
             );`,
             (err) => {
@@ -311,7 +311,7 @@ const ensureStatuslistTable = (db) => {
         } else if (row === undefined) {
           db.run(
             `CREATE TABLE statuslist (
-            id INTEGER,
+            id INTEGER PRIMARY KEY,
             status TEXT
             );`,
             (err) => {
