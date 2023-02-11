@@ -12,6 +12,7 @@ const ensureDecisionsTable = (db) => {
         } else if (row === undefined) {
           db.run(
             `CREATE TABLE decisions (
+            id INTEGER PRIMARY KEY,
             dateId INTEGER,
             institution INTEGER,
             country INTEGER,
@@ -45,6 +46,7 @@ const ensureUpdatesTable = (db) => {
         } else if (row === undefined) {
           db.run(
             `CREATE TABLE updates (
+            id INTEGER PRIMARY KEY,
             dateId INTEGER PRIMARY KEY,
             year INTEGER,
             month INTEGER,
@@ -119,6 +121,7 @@ const ensureStatusesTable = (db) => {
         } else if (row === undefined) {
           db.run(
             `CREATE TABLE statuses (
+            id INTEGER PRIMARY KEY,
             dateId INTEGER,
             institution INTEGER,
             status INTEGER,
@@ -151,6 +154,7 @@ const ensureApplicationsTable = (db) => {
         } else if (row === undefined) {
           db.run(
             `CREATE TABLE applications (
+            id INTEGER PRIMARY KEY,
             dateId INTEGER,
             institution INTEGER,
             country INTEGER,
