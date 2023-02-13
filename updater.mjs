@@ -54,7 +54,8 @@ const ensureUpdatesTable = (db) => {
             hour INTEGER,
             minute INTEGER,
             decisionsTotal INTEGER,
-            dataUpdated INTEGER DEFAULT 0
+            dataUpdated INTEGER DEFAULT 0,
+            timestamp INTEGER
             );`,
             (err) => {
               if (err) {
@@ -89,17 +90,20 @@ const ensureUpdateTypesTable = (db) => {
               if (err) {
                 reject(err);
               } else {
-                db.run(`INSERT INTO updateTypes (updateTypeId, updateTypeName) VALUES
+                db.run(
+                  `INSERT INTO updateTypes (updateTypeId, updateTypeName) VALUES
                 (0, "No data"),
                 (1, "Regular update"),
                 (2, "Initial upadte"),
-                (4, "Year closure")`, (err) => {
-                  if(err) {
-                    reject(err);
-                  }else {
-                    resolve();
+                (4, "Year closure")`,
+                  (err) => {
+                    if (err) {
+                      reject(err);
+                    } else {
+                      resolve();
+                    }
                   }
-                });
+                );
               }
             }
           );
@@ -194,6 +198,9 @@ const currentMonth = $.env.YEAR ? 12 : currentDate.getUTCMonth() + 1;
 const currentDay = $.env.YEAR ? 31 : currentDate.getUTCDate();
 const currentHour = $.env.YEAR ? 23 : currentDate.getUTCHours();
 const currentMinute = $.env.YEAR ? 59 : currentDate.getUTCMinutes();
+const currentTimestamp = $.env.YEAR
+  ? Math.floor(Date.UTC(parseInt($.env.YEAR), 11, 31, 23, 59, 0) / 1000)
+  : Math.floor(currentDate.valueOf() / 1000);
 const sqlLiteConnection = new sqlite3.Database("data/sqlite/tracker.db");
 await setupTrackerDatabase(sqlLiteConnection);
 $.env.NODE_TLS_REJECT_UNAUTHORIZED = 0;
@@ -202,7 +209,7 @@ const updatesData = await fetch(updatesUrl).then((res) => res.json());
 let dateId;
 if (Array.isArray(updatesData[0]) && updatesData[0].length == 0) {
   // dataUpdated is 0 by default
-  let query = `INSERT INTO updates (year, month, day, hour, minute, decisionsTotal) VALUES (${currentYear}, ${currentMonth}, ${currentDay}, ${currentHour}, ${currentMinute}, 0)`;
+  let query = `INSERT INTO updates (year, month, day, hour, minute, decisionsTotal, timestamp) VALUES (${currentYear}, ${currentMonth}, ${currentDay}, ${currentHour}, ${currentMinute}, 0, ${currentTimestamp})`;
   dateId = await new Promise((resolve, reject) => {
     sqlLiteConnection.run(query, function (err) {
       if (err) {
@@ -216,7 +223,7 @@ if (Array.isArray(updatesData[0]) && updatesData[0].length == 0) {
   process.exit(0);
 }
 
-let query = `INSERT INTO updates (year, month, day, hour, minute, decisionsTotal) VALUES (${currentYear}, ${currentMonth}, ${currentDay}, ${currentHour}, ${currentMinute}, ${updatesData[0].total})`;
+let query = `INSERT INTO updates (year, month, day, hour, minute, decisionsTotal, timestamp) VALUES (${currentYear}, ${currentMonth}, ${currentDay}, ${currentHour}, ${currentMinute}, ${updatesData[0].total}, ${currentTimestamp})`;
 dateId = await new Promise((resolve, reject) => {
   sqlLiteConnection.run(query, function (err) {
     if (err) {
@@ -227,7 +234,7 @@ dateId = await new Promise((resolve, reject) => {
   });
 });
 
-query = `SELECT * FROM updates WHERE dateId <= ${dateId} AND year = ${currentYear} ORDER BY dateId DESC, year DESC, month DESC, day DESC LIMIT 2`;
+query = `SELECT * FROM updates WHERE dateId <= ${dateId} AND strftime('%Y', timestamp, 'unixepoch') = '${currentYear}' ORDER BY dateId DESC, timestamp DESC LIMIT 2`;
 const lastCoupleUpdates = await new Promise((resolve, reject) => {
   sqlLiteConnection.all(query, (err, rows) => {
     if (err) {
