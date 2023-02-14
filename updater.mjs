@@ -48,11 +48,6 @@ const ensureUpdatesTable = (db) => {
             `CREATE TABLE updates (
             id INTEGER PRIMARY KEY,
             dateId INTEGER PRIMARY KEY,
-            year INTEGER,
-            month INTEGER,
-            day INTEGER,
-            hour INTEGER,
-            minute INTEGER,
             decisionsTotal INTEGER,
             dataUpdated INTEGER DEFAULT 0,
             timestamp INTEGER
@@ -193,11 +188,6 @@ const setupTrackerDatabase = (db) => {
 
 const randomSuffix = Math.random().toString(36).slice(2);
 const currentDate = new Date();
-const currentYear = parseInt($.env.YEAR) || currentDate.getUTCFullYear();
-const currentMonth = $.env.YEAR ? 12 : currentDate.getUTCMonth() + 1;
-const currentDay = $.env.YEAR ? 31 : currentDate.getUTCDate();
-const currentHour = $.env.YEAR ? 23 : currentDate.getUTCHours();
-const currentMinute = $.env.YEAR ? 59 : currentDate.getUTCMinutes();
 const currentTimestamp = $.env.YEAR
   ? Math.floor(Date.UTC(parseInt($.env.YEAR), 11, 31, 23, 59, 0) / 1000)
   : Math.floor(currentDate.valueOf() / 1000);
@@ -209,7 +199,7 @@ const updatesData = await fetch(updatesUrl).then((res) => res.json());
 let dateId;
 if (Array.isArray(updatesData[0]) && updatesData[0].length == 0) {
   // dataUpdated is 0 by default
-  let query = `INSERT INTO updates (year, month, day, hour, minute, decisionsTotal, timestamp) VALUES (${currentYear}, ${currentMonth}, ${currentDay}, ${currentHour}, ${currentMinute}, 0, ${currentTimestamp})`;
+  let query = `INSERT INTO updates (decisionsTotal, timestamp) VALUES (0, ${currentTimestamp})`;
   dateId = await new Promise((resolve, reject) => {
     sqlLiteConnection.run(query, function (err) {
       if (err) {
@@ -223,7 +213,7 @@ if (Array.isArray(updatesData[0]) && updatesData[0].length == 0) {
   process.exit(0);
 }
 
-let query = `INSERT INTO updates (year, month, day, hour, minute, decisionsTotal, timestamp) VALUES (${currentYear}, ${currentMonth}, ${currentDay}, ${currentHour}, ${currentMinute}, ${updatesData[0].total}, ${currentTimestamp})`;
+let query = `INSERT INTO updates (decisionsTotal, timestamp) VALUES (${updatesData[0].total}, ${currentTimestamp})`;
 dateId = await new Promise((resolve, reject) => {
   sqlLiteConnection.run(query, function (err) {
     if (err) {
