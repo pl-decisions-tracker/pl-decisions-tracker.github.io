@@ -189,8 +189,8 @@ const setupTrackerDatabase = (db) => {
 const randomSuffix = Math.random().toString(36).slice(2);
 const currentDate = new Date();
 const currentTimestamp = $.env.YEAR
-  ? Math.floor(Date.UTC(parseInt($.env.YEAR), 11, 31, 23, 59, 0) / 1000)
-  : Math.floor(currentDate.valueOf() / 1000);
+  ? Date.UTC(parseInt($.env.YEAR), 11, 31, 23, 59, 0)
+  : currentDate.valueOf();
 const sqlLiteConnection = new sqlite3.Database("data/sqlite/tracker.db");
 await setupTrackerDatabase(sqlLiteConnection);
 $.env.NODE_TLS_REJECT_UNAUTHORIZED = 0;
