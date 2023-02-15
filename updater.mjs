@@ -172,7 +172,7 @@ const ensureApplicationsTable = (db) => {
           resolve();
         }
       }
-    );
+    );currentYear
   });
 };
 
@@ -254,7 +254,7 @@ let updateType;
 if ($.env.YEAR) {
   updateType = 4;
 } else {
-  query = `SELECT SUM(DISTINCT dataUpdated) as updateMask FROM updates WHERE year = ${currentYear};`;
+  query = `SELECT SUM(DISTINCT dataUpdated) as updateMask FROM updates WHERE strftime('%Y', timestamp, 'unixepoch') = ${currentYear};`;
   const yearUpdateMask = await new Promise((resolve, reject) => {
     sqlLiteConnection.all(query, (err, rows) => {
       if (err) {
