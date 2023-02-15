@@ -188,6 +188,7 @@ const setupTrackerDatabase = (db) => {
 
 const randomSuffix = Math.random().toString(36).slice(2);
 const currentDate = new Date();
+const currentYear = parseInt($.env.YEAR) || currentDate.getUTCFullYear();
 const currentTimestamp = $.env.YEAR
   ? Date.UTC(parseInt($.env.YEAR), 11, 31, 23, 59, 0)
   : currentDate.valueOf();
