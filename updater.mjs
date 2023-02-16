@@ -225,7 +225,7 @@ dateId = await new Promise((resolve, reject) => {
   });
 });
 
-query = `SELECT * FROM updates WHERE dateId <= ${dateId} AND strftime('%Y', timestamp, 'unixepoch') = '${currentYear}' ORDER BY dateId DESC, timestamp DESC LIMIT 2`;
+query = `SELECT * FROM updates WHERE dateId <= ${dateId} AND strftime('%Y', timestamp/1000, 'unixepoch') = '${currentYear}' ORDER BY dateId DESC, timestamp DESC LIMIT 2`;
 const lastCoupleUpdates = await new Promise((resolve, reject) => {
   sqlLiteConnection.all(query, (err, rows) => {
     if (err) {
@@ -254,7 +254,7 @@ let updateType;
 if ($.env.YEAR) {
   updateType = 4;
 } else {
-  query = `SELECT SUM(DISTINCT dataUpdated) as updateMask FROM updates WHERE strftime('%Y', timestamp, 'unixepoch') = ${currentYear};`;
+  query = `SELECT SUM(DISTINCT dataUpdated) as updateMask FROM updates WHERE strftime('%Y', timestamp/1000, 'unixepoch') = '${currentYear}';`;
   const yearUpdateMask = await new Promise((resolve, reject) => {
     sqlLiteConnection.all(query, (err, rows) => {
       if (err) {
