@@ -172,7 +172,8 @@ const ensureApplicationsTable = (db) => {
           resolve();
         }
       }
-    );currentYear
+    );
+    currentYear;
   });
 };
 
@@ -200,7 +201,7 @@ const updatesData = await fetch(updatesUrl).then((res) => res.json());
 let dateId;
 if (Array.isArray(updatesData[0]) && updatesData[0].length == 0) {
   // dataUpdated is 0 by default
-  let query = `INSERT INTO updates (decisionsTotal, timestamp) VALUES (0, ${currentTimestamp})`;
+  let query = `INSERT INTO updates (decisionsTotal, timestamp, dataUpdated) VALUES (0, ${currentTimestamp}, 0)`;
   dateId = await new Promise((resolve, reject) => {
     sqlLiteConnection.run(query, function (err) {
       if (err) {
@@ -214,19 +215,8 @@ if (Array.isArray(updatesData[0]) && updatesData[0].length == 0) {
   process.exit(0);
 }
 
-let query = `INSERT INTO updates (decisionsTotal, timestamp) VALUES (${updatesData[0].total}, ${currentTimestamp})`;
-dateId = await new Promise((resolve, reject) => {
-  sqlLiteConnection.run(query, function (err) {
-    if (err) {
-      reject(err);
-    } else {
-      resolve(this.lastID);
-    }
-  });
-});
-
-query = `SELECT * FROM updates WHERE dateId <= ${dateId} AND strftime('%Y', timestamp/1000, 'unixepoch') = '${currentYear}' ORDER BY dateId DESC, timestamp DESC LIMIT 2`;
-const lastCoupleUpdates = await new Promise((resolve, reject) => {
+let query = `SELECT * FROM updates WHERE timestamp/1000 < ${currentTimestamp} AND strftime('%Y', timestamp/1000, 'unixepoch') = '${currentYear}' ORDER BY dateId DESC, timestamp DESC LIMIT 1`;
+const previousUpdate = await new Promise((resolve, reject) => {
   sqlLiteConnection.all(query, (err, rows) => {
     if (err) {
       reject(err);
@@ -237,11 +227,21 @@ const lastCoupleUpdates = await new Promise((resolve, reject) => {
 });
 
 if (
-  lastCoupleUpdates.length == 2 &&
-  lastCoupleUpdates[0].decisionsTotal === lastCoupleUpdates[1].decisionsTotal
+  previousUpdate.length == 1 &&
+  previousUpdate[0].decisionsTotal === updatesData[0].total
 ) {
+  query = `INSERT INTO updates (decisionsTotal, timestamp, dataUpdated) VALUES (${updatesData[0].total}, ${currentTimestamp}, 0)`;
+  dateId = await new Promise((resolve, reject) => {
+    sqlLiteConnection.run(query, function (err) {
+      if (err) {
+        reject(err);
+      } else {
+        resolve(this.lastID);
+      }
+    });
+  });
   echo(
-    `Nothing has changed since last successfull update on ${lastCoupleUpdates[1].year}-${lastCoupleUpdates[1].month}-${lastCoupleUpdates[1].day}. Exiting`
+    `Nothing has changed since last successfull update on ${previousUpdate[0].year}-${previousUpdate[0].month}-${previousUpdate[0].day}. Exiting`
   );
   process.exit(0);
 }
@@ -271,13 +271,13 @@ if ($.env.YEAR) {
   }
 }
 
-query = `UPDATE updates SET dataUpdated = ${updateType} WHERE dateId = ${dateId}`;
-await new Promise((resolve, reject) => {
-  sqlLiteConnection.all(query, (err, rows) => {
+query = `INSERT INTO updates (decisionsTotal, timestamp, dataUpdated) VALUES (${updatesData[0].total}, ${currentTimestamp}, ${updateType})`;
+dateId = await new Promise((resolve, reject) => {
+  sqlLiteConnection.run(query, function (err) {
     if (err) {
       reject(err);
     } else {
-      resolve(rows);
+      resolve(this.lastID);
     }
   });
 });
