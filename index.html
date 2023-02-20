@@ -410,7 +410,8 @@
             });
           }
         }
-        const nowYear = new Date().getFullYear();
+        const yearFromGet = window.location.search.split('?')[1]?.split('&').map((sp)=>sp.split('=')).find((sp)=>sp[0]==='year')[1]
+        const nowYear = parseInt(yearFromGet) || new Date().getFullYear();
         const currentDataYear = i.split("-")[0];
         if (lastChange?.total !== dayTotal) {
           previousChange = lastChange;
