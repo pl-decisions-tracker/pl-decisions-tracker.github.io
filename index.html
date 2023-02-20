@@ -285,22 +285,22 @@
         return `<h${headerLevel}>${title}</h${headerLevel}>
         ${description}
         <strong>${
-          lastChangeCaseType.total - previousChangeCaseType.total
+          lastChangeCaseType?.total - previousChangeCaseType?.total
         }</strong>
         , из них
         <strong style="color: green">${
-          (lastChangeCaseType.decisions["Pozytywna"] || 0) -
-          (previousChangeCaseType.decisions["Pozytywna"] || 0)
+          (lastChangeCaseType?.decisions["Pozytywna"] || 0) -
+          (previousChangeCaseType?.decisions["Pozytywna"] || 0)
         }</strong>
         положительных,
         <strong style="color: red">${
-          (lastChangeCaseType.decisions["Negatywna"] || 0) -
-          (previousChangeCaseType.decisions["Negatywna"] || 0)
+          (lastChangeCaseType?.decisions["Negatywna"] || 0) -
+          (previousChangeCaseType?.decisions["Negatywna"] || 0)
         }</strong>
         отрицательных и
         <strong style="color: blue">${
-          (lastChangeCaseType.decisions["Umorzenie"] || 0) -
-          (previousChangeCaseType.decisions["Umorzenie"] || 0)
+          (lastChangeCaseType?.decisions["Umorzenie"] || 0) -
+          (previousChangeCaseType?.decisions["Umorzenie"] || 0)
         }</strong>
         прекращённых`;
       };
