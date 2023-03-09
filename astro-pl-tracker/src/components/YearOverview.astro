@@ -1,0 +1,500 @@
+---
+import { PrismaClient } from "@prisma/client";
+import type { ChartData } from "chart.js";
+type Props = {
+  year: number;
+};
+
+const { year } = Astro.props;
+const prisma = new PrismaClient();
+let data;
+let years;
+try {
+  years = await prisma.updates
+    .findMany({
+      select: {
+        timestamp: true,
+      },
+      where: {
+        OR: [
+          {
+            dataUpdated: {
+              equals: 1,
+            },
+          },
+          {
+            dataUpdated: {
+              equals: 2,
+            },
+          },
+        ],
+      },
+    })
+    .then((res) =>
+      Array.from(new Set(res.map((t) => t.timestamp.getUTCFullYear()))).sort()
+    );
+  data = await prisma.decisions.findMany({
+    where: {
+      updateObj: {
+        timestamp: {
+          lt: new Date(`${year + 1}-01-01`),
+          gte: new Date(`${year}-01-01`),
+        },
+        dataUpdated: {
+          gt: 0,
+        },
+      },
+      countryObj: {
+        code: "RU",
+      },
+    },
+    include: {
+      updateObj: true,
+      institutionObj: true,
+      caseTypeObj: true,
+      decisionMarkerObj: true,
+    },
+    orderBy: [
+      {
+        updateObj: {
+          timestamp: "asc",
+        },
+      },
+      {
+        caseType: "asc",
+      },
+      {
+        decisionMarker: "asc",
+      },
+    ],
+  });
+} catch (error) {
+  console.log("error!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!", error);
+} finally {
+  await prisma.$disconnect();
+}
+interface colorDict {
+  [key: string]: [number, number, number];
+}
+const decisionMarkerColors: colorDict = {
+  Inna: [0, 0, 0],
+  "Procedury priorytetowe lub przyspieszone": [0, 0, 0],
+  "Inna - pozytywna": [0, 0, 0],
+  Pozytywna: [0x19, 0x87, 0x54],
+  "Zgoda na pobyt tolerowany": [0, 0, 0],
+  Negatywna: [0xdc, 0x35, 0x45],
+  Wstrzymanie: [0, 0, 0],
+  Umorzenie: [0x0d, 0xca, 0xf0],
+  Wznowienie: [0, 0, 0],
+  "Wnioski bezpodstawne": [0, 0, 0],
+  "Ochrona uzupełniająca": [0xff, 0xc1, 0x07],
+  "Wnioski niedopuszczalne": [0, 0, 0],
+  "Zgoda na pobyt ze względów humanitarnych": [0, 0, 0],
+  "Pozostawienie bez rozpoznania": [0, 0, 0],
+};
+interface decisionMarkerClassDict {
+  [key: string]: string;
+}
+const decisionMarkerClass: decisionMarkerClassDict = {
+  Inna: "text-dark-emphasis",
+  "Procedury priorytetowe lub przyspieszone": "text-dark-emphasis",
+  "Inna - pozytywna": "text-dark-emphasis",
+  Pozytywna: "text-success",
+  "Zgoda na pobyt tolerowany": "text-dark-emphasis",
+  Negatywna: "text-danger",
+  Wstrzymanie: "text-dark-emphasis",
+  Umorzenie: "text-info",
+  Wznowienie: "text-dark-emphasis",
+  "Wnioski bezpodstawne": "text-dark-emphasis",
+  "Ochrona uzupełniająca": "text-warning",
+  "Wnioski niedopuszczalne": "text-dark-emphasis",
+  "Zgoda na pobyt ze względów humanitarnych": "text-dark-emphasis",
+  "Pozostawienie bez rozpoznania": "text-dark-emphasis",
+};
+
+interface finalObjectType {
+  [key: string]: {
+    chartData: ChartData;
+    institutions: { [key: string]: { chartData: ChartData } };
+  };
+}
+interface helperType {
+  [key: string]: {
+    institutions: {
+      [key: string]: {
+        [key: string]: {
+          total: number[];
+        };
+      };
+    };
+    totals: {
+      [key: string]: {
+        total: number[];
+      };
+    };
+  };
+}
+let helper: helperType = {};
+const finalObject = data?.reduce((acc: finalObjectType, curr) => {
+  const currentCaseType = curr.caseTypeObj.type;
+  const currentDecisionMarker = curr.decisionMarkerObj.description;
+  const currentInstitution = curr.institutionObj.name;
+  if (!acc.hasOwnProperty(currentCaseType)) {
+    acc[currentCaseType] = {
+      chartData: { labels: [], datasets: [] },
+      institutions: {},
+    };
+    helper[currentCaseType] = { totals: {}, institutions: {} };
+  }
+  if (
+    !acc[currentCaseType].chartData.datasets.some(
+      (d) => d.label === currentDecisionMarker
+    )
+  ) {
+    acc[currentCaseType].chartData.datasets.push({
+      label: currentDecisionMarker,
+      data: [],
+      borderColor: `rgb(${decisionMarkerColors[currentDecisionMarker].join(
+        ","
+      )})`,
+      backgroundColor: `rgba(${decisionMarkerColors[currentDecisionMarker].join(
+        ","
+      )}, 0.5)`,
+    });
+    helper[currentCaseType].totals[currentDecisionMarker] = {
+      total: [],
+    };
+  }
+  if (!acc[currentCaseType].institutions.hasOwnProperty(currentInstitution)) {
+    acc[currentCaseType].institutions[currentInstitution] = {
+      chartData: { labels: [], datasets: [] },
+    };
+    helper[currentCaseType].institutions[currentInstitution] = {};
+  }
+  if (
+    !helper[currentCaseType].institutions[currentInstitution].hasOwnProperty(
+      currentDecisionMarker
+    )
+  ) {
+    helper[currentCaseType].institutions[currentInstitution][
+      currentDecisionMarker
+    ] = {
+      total: [],
+    };
+  }
+  if (
+    !acc[currentCaseType].institutions[
+      currentInstitution
+    ].chartData.datasets.some((d) => d.label === currentDecisionMarker)
+  ) {
+    acc[currentCaseType].institutions[
+      currentInstitution
+    ].chartData.datasets.push({
+      label: currentDecisionMarker,
+      data: [],
+      borderColor: `rgb(${decisionMarkerColors[currentDecisionMarker].join(
+        ","
+      )})`,
+      backgroundColor: `rgba(${decisionMarkerColors[currentDecisionMarker].join(
+        ","
+      )}, 0.5)`,
+    });
+  }
+  const currentDataset = acc[currentCaseType].chartData.datasets.find(
+    (d) => d.label === currentDecisionMarker
+  );
+  const currentInstDataset = acc[currentCaseType].institutions[
+    currentInstitution
+  ].chartData.datasets.find((d) => d.label === currentDecisionMarker);
+  let dataIndex = acc[currentCaseType].chartData.labels.indexOf(
+    curr.updateObj.timestamp.valueOf()
+  );
+  if (dataIndex === -1) {
+    dataIndex = acc[currentCaseType].chartData.labels.length;
+    acc[currentCaseType].chartData.labels.push(
+      curr.updateObj.timestamp.valueOf()
+    );
+  }
+  acc[currentCaseType].institutions[currentInstitution].chartData.labels =
+    acc[currentCaseType].chartData.labels;
+  if (
+    isNaN(
+      helper[currentCaseType].totals[currentDecisionMarker].total[dataIndex]
+    )
+  ) {
+    helper[currentCaseType].totals[currentDecisionMarker].total[dataIndex] = 0;
+  }
+  helper[currentCaseType].totals[currentDecisionMarker].total[dataIndex] +=
+    curr.count;
+  helper[currentCaseType].institutions[currentInstitution][
+    currentDecisionMarker
+  ].total[dataIndex] = curr.count;
+  if (curr.updateObj.dataUpdated === 2) {
+    if (!isNaN(currentDataset.data[dataIndex])) {
+      currentDataset.data[dataIndex] += curr.count;
+    } else {
+      currentDataset.data[dataIndex] = curr.count;
+    }
+    currentInstDataset.data[dataIndex] = curr.count;
+  } else {
+    if (dataIndex === 0) {
+      currentDataset.data[dataIndex] = null;
+      currentInstDataset.data[dataIndex] = null;
+    } else {
+      if (!isNaN(currentDataset.data[dataIndex])) {
+        currentDataset.data[dataIndex] += curr.count;
+      } else {
+        currentDataset.data[dataIndex] =
+          curr.count -
+          helper[currentCaseType].totals[currentDecisionMarker].total[
+            dataIndex - 1
+          ];
+      }
+      currentInstDataset.data[dataIndex] =
+        curr.count -
+        helper[currentCaseType].institutions[currentInstitution][
+          currentDecisionMarker
+        ].total[dataIndex - 1];
+    }
+  }
+  return acc;
+}, {});
+---
+
+<div>
+  <div class="d-flex justify-content-center flex-wrap">
+    {
+      years?.map((y, idx) => (
+        <>
+          <div class="mx-0 p-2">
+            <a href={`/${y.toString()}.html`}>{y.toString()}</a>
+          </div>
+          {idx < years.length - 1 ? <div class="mx-0 p-2"> | </div> : ""}
+        </>
+      ))
+    }
+  </div>
+  <div class="d-flex justify-content-center flex-wrap">
+    {
+      Object.keys(finalObject).map((caseType) => (
+        <div class="p-2">
+          <h3 class="text-center">{caseType}</h3>
+          Новых решений{" "}
+          <strong>
+            {finalObject[caseType].chartData.datasets?.reduce(
+              (acc, curr) => acc + curr.data[curr.data.length - 1],
+              0
+            )}
+          </strong>
+          из них
+          {finalObject[caseType].chartData.datasets?.map((ds) => (
+            <>
+              <strong class={decisionMarkerClass[ds.label]}>
+                {ds.data?.slice(-1)}
+              </strong>{" "}
+              {ds.label}{" "}
+            </>
+          ))}
+          <br />С начала наблюдений{" "}
+          <strong>
+            {finalObject[caseType].chartData.datasets?.reduce(
+              (acc, curr) =>
+                acc +
+                curr.data?.reduce(
+                  (dataSum, currentData) => dataSum + currentData,
+                  0
+                ),
+              0
+            )}
+          </strong>
+          из них
+          {finalObject[caseType].chartData.datasets.map((ds) => (
+            <>
+              <strong class={decisionMarkerClass[ds.label]}>
+                {ds.data?.reduce(
+                  (dataSum, currentData) => dataSum + currentData,
+                  0
+                )}
+              </strong>{" "}
+              {ds.label}{" "}
+            </>
+          ))}
+          <canvas
+            id={`${caseType.replaceAll(" ", "-").replaceAll(".", "")}-chart`}
+            width="700"
+            height="400"
+          />
+          <button
+            class="btn btn-primary"
+            type="button"
+            data-bs-toggle="collapse"
+            data-bs-target={`#${caseType
+              .replaceAll(" ", "-")
+              .replaceAll(".", "")}-institutions`}
+          >
+            Institutions
+          </button>
+          <div
+            class="p-2 collapse"
+            id={`${caseType
+              .replaceAll(" ", "-")
+              .replaceAll(".", "")}-institutions`}
+          >
+            {Object.keys(finalObject[caseType].institutions).map((inst) => (
+              <div class="p-2">
+                <h4>{inst}</h4>
+                Новых решений{" "}
+                <strong>
+                  {finalObject[caseType].institutions[inst].chartData.datasets?.reduce(
+                    (acc, curr) => acc + curr.data[curr.data.length - 1],
+                    0
+                  )}
+                </strong>
+                из них
+                {finalObject[caseType].institutions[inst].chartData.datasets?.map((ds) => (
+                  <>
+                    <strong class={decisionMarkerClass[ds.label]}>
+                      {ds.data?.slice(-1)}
+                    </strong>{" "}
+                    {ds.label}{" "}
+                  </>
+                ))}
+                <br />С начала наблюдений{" "}
+                <strong>
+                  {finalObject[caseType].institutions[inst].chartData.datasets?.reduce(
+                    (acc, curr) =>
+                      acc +
+                      curr.data?.reduce(
+                        (dataSum, currentData) => dataSum + currentData,
+                        0
+                      ),
+                    0
+                  )}
+                </strong>
+                из них
+                {finalObject[caseType].institutions[inst].chartData.datasets.map((ds) => (
+                  <>
+                    <strong class={decisionMarkerClass[ds.label]}>
+                      {ds.data?.reduce(
+                        (dataSum, currentData) => dataSum + currentData,
+                        0
+                      )}
+                    </strong>{" "}
+                    {ds.label}{" "}
+                  </>
+                ))}
+                <button
+                  class="btn btn-primary"
+                  type="button"
+                  data-bs-toggle="collapse"
+                  data-bs-target={`#${caseType
+                    .replaceAll(" ", "-")
+                    .replaceAll(".", "")}-${inst
+                    .replaceAll(" ", "-")
+                    .replaceAll(".", "")}-chart-container`}
+                >
+                  Chart
+                </button>
+                <div
+                  id={`${caseType
+                    .replaceAll(" ", "-")
+                    .replaceAll(".", "")}-${inst
+                    .replaceAll(" ", "-")
+                    .replaceAll(".", "")}-chart-container`}
+                  class="collapse"
+                >
+                  <canvas
+                    id={`${caseType
+                      .replaceAll(" ", "-")
+                      .replaceAll(".", "")}-${inst
+                      .replaceAll(" ", "-")
+                      .replaceAll(".", "")}-chart`}
+                    width="700"
+                    height="400"
+                  />
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      ))
+    }
+  </div>
+</div>
+
+<script
+  is:inline="true"
+  src="https://cdn.jsdelivr.net/npm/chart.js@4/dist/chart.umd.js"
+></script>
+<script
+  is:inline="true"
+  src="https://cdn.jsdelivr.net/npm/moment@2/moment.min.js"
+></script>
+<script
+  is:inline="true"
+  src="https://cdn.jsdelivr.net/npm/chartjs-adapter-moment@1/dist/chartjs-adapter-moment.min.js"
+></script>
+<script
+  is:inline="true"
+  src="https://cdn.jsdelivr.net/npm/bootstrap@5/dist/js/bootstrap.bundle.min.js"
+></script>
+<script define:vars={{ finalObject }}>
+  let originalCanvasWidth = Math.min(window.outerWidth, 700);
+  let canvasWidth = originalCanvasWidth;
+  const staticCanvases = document.getElementsByTagName("canvas");
+  for (const c of staticCanvases) {
+    const style = window.getComputedStyle(c.parentElement);
+    canvasWidth =
+      originalCanvasWidth -
+      parseInt(style.getPropertyValue("padding-left"), 10) -
+      parseInt(style.getPropertyValue("padding-right"), 10);
+    c.width = canvasWidth;
+  }
+  Object.keys(finalObject).forEach((caseType) => {
+    let ctx = document.getElementById(
+      `${caseType.replaceAll(" ", "-").replaceAll(".", "")}-chart`
+    );
+    new Chart(ctx, {
+      type: "line",
+      data: finalObject[caseType].chartData,
+      options: {
+        responsive: true,
+        plugins: {
+          legend: {
+            position: "top",
+          },
+        },
+        scales: {
+          x: {
+            type: "time",
+          },
+        },
+      },
+    });
+
+    Object.keys(finalObject[caseType].institutions).forEach((inst) => {
+      let ictx = document.getElementById(
+        `${caseType.replaceAll(" ", "-").replaceAll(".", "")}-${inst
+          .replaceAll(" ", "-")
+          .replaceAll(".", "")}-chart`
+      );
+      new Chart(ictx, {
+        type: "line",
+        data: finalObject[caseType].institutions[inst].chartData,
+        options: {
+          responsive: true,
+          plugins: {
+            legend: {
+              position: "top",
+            },
+          },
+          scales: {
+            x: {
+              type: "time",
+            },
+          },
+        },
+      });
+    });
+  });
+</script>

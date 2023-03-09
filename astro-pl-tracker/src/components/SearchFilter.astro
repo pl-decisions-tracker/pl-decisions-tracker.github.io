@@ -1,0 +1,51 @@
+---
+type Props = {
+  searchClass: string;
+  valueClass: string;
+  gridId: string;
+};
+
+const { searchClass, valueClass, gridId } = Astro.props;
+---
+
+<>
+  <input
+    class="form-control"
+    type="search"
+    name={`${searchClass}Search`}
+    id={`${searchClass}Search`}
+    size="7"
+  />
+</>
+
+<style></style>
+<script is:inline="true" define:vars={{ searchClass, valueClass, gridId }}>
+  var searchtimer;
+  window.addEventListener("DOMContentLoaded", () => {
+    document
+      .querySelector(`#${searchClass}Search`)
+      .addEventListener("input", (e) => {
+        clearTimeout(searchtimer);
+        searchtimer = setTimeout(() => {
+          const clonedGrid = document.getElementById(gridId).cloneNode(true);
+          const valueElements = clonedGrid.getElementsByClassName(searchClass);
+          if(valueElements.length === 0){
+            throw new Error(`HTML Elements with class '${searchClass}' not found`);
+          }
+          for (let index = 0; index < valueElements.length; index++) {
+            const currentElement = valueElements.item(index);
+            const currentValueEl = currentElement.getElementsByClassName(valueClass) ;
+            if(currentValueEl.length !== 1){
+              throw new Error(`There should be only 1 div with class ${valueClass} inside each ${searchClass} element, but found ${currentValueEl.length}`);
+            }
+            if(currentValueEl.item(0).innerText.includes(e.target.value)){
+              currentElement.classList.remove('d-none');
+            }else{
+              currentElement.classList.add('d-none');
+            }
+          }
+          document.getElementById(gridId).parentNode.replaceChild(clonedGrid, document.getElementById(gridId));
+        }, 1000);
+      });
+  });
+</script>

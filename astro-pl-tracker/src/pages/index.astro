@@ -1,0 +1,10 @@
+---
+import YearOverview from "../components/YearOverview.astro";
+import MainLayout from "../layouts/MainLayout.astro";
+---
+
+<MainLayout>
+	<YearOverview year={(new Date()).getUTCFullYear()}></YearOverview>
+</MainLayout>
+
+

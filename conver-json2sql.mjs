@@ -5,7 +5,7 @@ const countryId = 179;
 const currentYear = 2022;
 const currentHour = 21;
 const currentMinute = 5;
-const sqlLiteConnection = new sqlite3.Database("data/sqlite/tracker.db");
+const sqlLiteConnection = new sqlite3.Database("astro-pl-tracker/prisma/tracker.db");
 
 // decisions
 const decisionsJsonData = fs.readJSONSync("decisions.json");

@@ -1,0 +1,109 @@
+---
+import { PrismaClient } from "@prisma/client";
+
+const prisma = new PrismaClient();
+let scriptInjectData = {
+  lastCheck: 0,
+  lastTwoUpdates: [0, 0],
+};
+try {
+  scriptInjectData.lastCheck = await prisma.updates
+    .findFirst({
+      where: {
+        timestamp: {
+          lt: new Date(`${new Date().getUTCFullYear() + 1}-01-01`),
+          gte: new Date(`${new Date().getUTCFullYear()}-01-01`),
+        },
+      },
+      orderBy: [
+        {
+          dateId: "desc",
+        },
+      ],
+    })
+    .then((res) => (res && res.timestamp ? res.timestamp.valueOf() : -1));
+  scriptInjectData.lastTwoUpdates = await prisma.updates
+    .findMany({
+      where: {
+        dataUpdated: {
+          gt: 0,
+          lt: 4,
+        },
+      },
+      take: 2,
+      orderBy: {
+        dateId: "desc",
+      },
+    })
+    .then((res) =>
+      res.length === 2
+        ? res.map((e) => (e && e.timestamp ? e.timestamp?.valueOf() : -1))
+        : [-1, -1]
+    );
+} catch (error) {
+  console.log("error!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!", error);
+} finally {
+  await prisma.$disconnect();
+}
+---
+
+<div>
+  <p>Каждодневное наблюдение ведётся с 2022-08-10</p>
+  <p>
+    Обновление данного трекера происходит ежедневно, однако управление по делам
+    иностранцев обновляет свои данные на сайте migracje.gov.pl (mgp) только
+    несколько раз в месяц или реже в произвольные даты
+  </p>
+  <table class="table table-borderless w-auto table-sm">
+    <tr>
+      <td>Трекер проверил данные на mgp:</td>
+      <td
+        ><span
+          id="lastCheck"
+          class="toLocalTime"
+          data-datetime={scriptInjectData.lastCheck}
+        >
+        </span></td
+      >
+    </tr>
+    <tr>
+      <td>Последние обновление на mgp:</td>
+      <td
+        ><span
+          id="lastData"
+          class="toLocalTime"
+          data-datetime={scriptInjectData.lastTwoUpdates[0]}></span></td
+      >
+    </tr>
+    <tr>
+      <td>Пердпоследние обновление на mgp:</td>
+      <td
+        ><span
+          id="preLastData"
+          class="toLocalTime"
+          data-datetime={scriptInjectData.lastTwoUpdates[1]}></span></td
+      >
+    </tr>
+  </table>
+</div>
+
+<script>
+  const convertTimestampToLocalTimeString = (ts: number) => {
+    const datetime = new Date(ts);
+    const year = datetime.getFullYear();
+    const month = (datetime.getMonth() + 1).toString().padStart(2, "0");
+    const day = datetime.getDate().toString().padStart(2, "0");
+    const hour = datetime.getHours().toString().padStart(2, "0");
+    const minutes = datetime.getMinutes().toString().padStart(2, "0");
+    return `${year}-${month}-${day} ${hour}:${minutes}`;
+  };
+  const checkSpan = document
+    .querySelectorAll("span.toLocalTime")
+    .forEach((s) => {
+      if (s instanceof HTMLElement && s.dataset.datetime) {
+        s.innerHTML = convertTimestampToLocalTimeString(
+          parseInt(s.dataset.datetime)
+        );
+      }
+    });
+</script>

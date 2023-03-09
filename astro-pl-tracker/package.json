@@ -1,0 +1,25 @@
+{
+	"name": "astro-pl-tracker",
+	"type": "module",
+	"version": "0.0.1",
+	"scripts": {
+		"dev": "astro dev",
+		"start": "astro dev",
+		"build": "astro build",
+		"preview": "astro preview",
+		"astro": "astro"
+	},
+	"dependencies": {
+		"@popperjs/core": "^2.11.6",
+		"@prisma/client": "^4.10.1",
+		"@types/bootstrap": "^5.2.6",
+		"@types/chart.js": "^2.9.37",
+		"astro": "^2.0.10",
+		"bootstrap": "^5.2.3"
+	},
+	"devDependencies": {
+		"@fullhuman/postcss-purgecss": "^5.0.0",
+		"prisma": "^4.10.1",
+		"sass": "^1.58.3"
+	}
+}

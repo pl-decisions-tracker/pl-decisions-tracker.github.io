@@ -1,0 +1,281 @@
+---
+import { PrismaClient } from "@prisma/client";
+import MainLayout from "../layouts/MainLayout.astro";
+import SearchFilter from "../components/SearchFilter.astro";
+import DropFilter from "../components/DropFilter.astro";
+const prisma = new PrismaClient();
+const decisions = await prisma.decisions.findMany({
+  include: {
+    caseTypeObj: true,
+    decisionMarkerObj: true,
+    institutionObj: true,
+    updateObj: true,
+  },
+  where: {
+    countryObj: {
+      code: "RU",
+    },
+  },
+  orderBy: [
+    {
+      updateObj: {
+        timestamp: "asc",
+      },
+    },
+    {
+      institution: "asc",
+    },
+    {
+      caseType: "asc",
+    },
+    {
+      decisionMarker: "asc",
+    },
+  ],
+});
+prisma.$disconnect();
+interface DecisionRecord {
+  total: number;
+  count: number;
+}
+interface CaseTypeRecord {
+  total: number;
+  count: number;
+  decisions: {
+    [key: string]: DecisionRecord;
+  };
+}
+interface InstitutionRecord {
+  total: number;
+  count: number;
+  caseTypes: {
+    [key: string]: CaseTypeRecord;
+  };
+}
+interface DateRecord {
+  total: number;
+  count: number;
+  institutions: {
+    [key: string]: InstitutionRecord;
+  };
+}
+interface FinalObjectType {
+  [key: string]: DateRecord;
+}
+const instSet = new Set<string>();
+const caseTypeSet = new Set<string>();
+const decisionSet = new Set<string>();
+const finalObject: FinalObjectType = decisions.reduce((acc, curr) => {
+  const currentDate = curr.updateObj.timestamp.valueOf();
+  const currentInst = curr.institutionObj.name;
+  instSet.add(currentInst);
+  const currentCaseType = curr.caseTypeObj.type;
+  caseTypeSet.add(currentCaseType);
+  const currentDecision = curr.decisionMarkerObj.description;
+  decisionSet.add(currentDecision);
+  if (!acc.hasOwnProperty(currentDate)) {
+    acc[currentDate] = { total: 0, count: 0, institutions: {} };
+  }
+  if (!acc[currentDate].institutions.hasOwnProperty(currentInst)) {
+    acc[currentDate].institutions[currentInst] = {
+      total: 0,
+      count: 0,
+      caseTypes: {},
+    };
+  }
+  if (
+    !acc[currentDate].institutions[currentInst].caseTypes.hasOwnProperty(
+      currentCaseType
+    )
+  ) {
+    acc[currentDate].institutions[currentInst].caseTypes[currentCaseType] = {
+      total: 0,
+      count: 0,
+      decisions: {},
+    };
+  }
+  if (
+    !acc[currentDate].institutions[currentInst].caseTypes[
+      currentCaseType
+    ].decisions.hasOwnProperty(currentDecision)
+  ) {
+    acc[currentDate].institutions[currentInst].caseTypes[
+      currentCaseType
+    ].decisions[currentDecision] = {
+      total: 0,
+      count: 0,
+    };
+  }
+  acc[currentDate].total += curr.count;
+  acc[currentDate].count++;
+  acc[currentDate].institutions[currentInst].total += curr.count;
+  acc[currentDate].institutions[currentInst].count++;
+  acc[currentDate].institutions[currentInst].caseTypes[currentCaseType].total +=
+    curr.count;
+  acc[currentDate].institutions[currentInst].caseTypes[currentCaseType].count++;
+  acc[currentDate].institutions[currentInst].caseTypes[
+    currentCaseType
+  ].decisions[currentDecision].total += curr.count;
+  acc[currentDate].institutions[currentInst].caseTypes[currentCaseType]
+    .decisions[currentDecision].count++;
+  return acc;
+}, {} as FinalObjectType);
+---
+
+<MainLayout>
+  <strong
+    >Количество решений вынесенных на определённю дату. Данное количество
+    считается от начала года и сбрасывается 1 января
+  </strong>
+  <div class="d-flex flex-nowrap flex-column p-2" id="decisionsTable">
+    <div
+      class="d-flex flex-nowrap align-items-stretch flex-row"
+      style="position: -webkit-sticky; position: sticky; top: -10px; background: white; z-index: 10"
+    >
+      <div class="border p-2" style="width: 6.4em">Дата</div>
+      <div class="border p-2" style="width: 21.8em">Институция</div>
+      <div class="border p-2" style="width: 18.7em">Тип дела</div>
+      <div class="border p-2" style="width: 13.5em">Решение</div>
+      <div class="border p-2" style="width: 6.6em">Количество</div>
+      <div class="border p-2" style="width: 5em">Сумма по типу</div>
+      <div class="border p-2" style="width: 6.2em">Сумма по институции</div>
+      <div class="border p-2" style="width: 4.6em">Сумма по дате</div>
+    </div>
+    <div
+      class="d-flex flex-nowrap align-items-stretch flex-row"
+      style="position: -webkit-sticky; position: sticky; top: 56px; background: white; z-index: 10"
+    >
+      <div class="border p-1" style="width: 6.4em">
+        <SearchFilter
+          searchClass="decisionDateFilter"
+          valueClass="dateValue"
+          gridId="gridData"
+        />
+      </div>
+      <div class="border p-1" style="width: 21.8em">
+        <DropFilter
+          searchClass="decisionInstFilter"
+          valueClass="instValue"
+          filterValues={Array.from(instSet)}
+          gridId="gridData"
+        />
+      </div>
+      <div class="border p-1" style="width: 18.7em">
+        <DropFilter
+          searchClass="decisionCaseFilter"
+          valueClass="caseValue"
+          filterValues={Array.from(caseTypeSet)}
+          gridId="gridData"
+        />
+      </div>
+      <div class="border p-1" style="width: 13.5em">
+        <DropFilter
+          searchClass="decisionDecFilter"
+          valueClass="decValue"
+          filterValues={Array.from(decisionSet)}
+          gridId="gridData"
+        />
+      </div>
+      <div class="border p-2" style="width: 6.6em"></div>
+      <div class="border p-2" style="width: 5em"></div>
+      <div class="border p-2" style="width: 6.2em"></div>
+      <div class="border p-2" style="width: 4.6em"></div>
+    </div>
+    <div id="gridData">
+      {
+        Object.keys(finalObject)
+          .sort()
+          .map((date, dateIdx) => (
+            <div class="d-flex flex-nowrap align-items-stretch flex-row decisionDateFilter filter-container">
+              <div class="border p-2 dateValue" style="width: 6.4em">
+                <span style="position: -webkit-sticky; position: sticky; top: 105px;">
+                  {`${new Date(parseInt(date)).getUTCFullYear()}-${(
+                    new Date(parseInt(date)).getUTCMonth() + 1
+                  )
+                    .toString()
+                    .padStart(2, "0")}-${new Date(parseInt(date))
+                    .getUTCDate()
+                    .toString()
+                    .padStart(2, "0")}`}
+                </span>
+              </div>
+              <div class="d-flex flex-nowrap flex-column">
+                {Object.keys(finalObject[date].institutions).map(
+                  (inst, instIdx) => (
+                    <div class="d-flex flex-nowrap align-items-stretch flex-row decisionInstFilter filter-container">
+                      <div class="border p-2 instValue" style="width: 21.8em">
+                        <span style="position: -webkit-sticky; position: sticky; top: 105px;">
+                          {inst}
+                        </span>
+                      </div>
+                      <div class="d-flex flex-nowrap flex-column">
+                        {Object.keys(
+                          finalObject[date].institutions[inst].caseTypes
+                        ).map((ct, ctIdx) => (
+                          <div class="d-flex flex-nowrap align-items-stretch flex-row decisionCaseFilter filter-container">
+                            <div
+                              class="border p-2 caseValue"
+                              style="width: 18.7em"
+                            >
+                              <span style="position: -webkit-sticky; position: sticky; top: 105px;">
+                                {ct}
+                              </span>
+                            </div>
+                            <div class="d-flex flex-nowrap flex-column">
+                              {Object.keys(
+                                finalObject[date].institutions[inst].caseTypes[
+                                  ct
+                                ].decisions
+                              ).map((dec, decIdx) => (
+                                <div class="d-flex flex-nowrap align-items-stretch flex-row decisionDecFilter filter-container">
+                                  <div
+                                    class="border p-2 decValue"
+                                    style="width: 13.5em"
+                                  >
+                                    {dec}
+                                  </div>
+                                  <div class="border p-2" style="width: 6.6em">
+                                    {
+                                      finalObject[date].institutions[inst]
+                                        .caseTypes[ct].decisions[dec].total
+                                    }
+                                  </div>
+                                </div>
+                              ))}
+                            </div>
+                            <div class="border p-2" style="width: 5em">
+                              <span style="position: -webkit-sticky; position: sticky; top: 105px;">
+                                {
+                                  finalObject[date].institutions[inst]
+                                    .caseTypes[ct].total
+                                }
+                              </span>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                      <div class="border p-2" style="width: 6.2em">
+                        <span style="position: -webkit-sticky; position: sticky; top: 105px;">
+                          {finalObject[date].institutions[inst].total}
+                        </span>
+                      </div>
+                    </div>
+                  )
+                )}
+              </div>
+              <div class="border p-2" style="width: 4.6em">
+                <span style="position: -webkit-sticky; position: sticky; top: 105px;">
+                  {finalObject[date].total}
+                </span>
+              </div>
+            </div>
+          ))
+      }
+    </div>
+  </div>
+  <script
+    is:inline="true"
+    src="https://cdn.jsdelivr.net/npm/bootstrap@5/dist/js/bootstrap.bundle.min.js"
+  ></script>
+  <script slot="body-script"></script>
+</MainLayout>

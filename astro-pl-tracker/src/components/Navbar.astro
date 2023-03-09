@@ -1,0 +1,86 @@
+---
+type Props = {};
+
+const {} = Astro.props;
+const links = [
+  {
+    href: [
+      "/",
+      "/index.html",
+      "/2022.html",
+      "/2023.html",
+      "/2024.html",
+      "/2025.html",
+    ],
+    title: "Main",
+  },
+  {
+    href: "/decisions.html",
+    title: "Detailed Decisions",
+  },
+  {
+    href: "/applications.html",
+    title: "Detailed Applications",
+  },
+  {
+    href: "/statuses.html",
+    title: "Detailed Statuses",
+  },
+  {
+    href: "/decisionstotal.html",
+    title: "Decisions Totals",
+  },
+  {
+    href: "/applicationstotal.html",
+    title: "Applications Totals",
+  },
+  {
+    href: "/statusestotal.html",
+    title: "Statuses Totals",
+  },
+  {
+    href: "/updates.html",
+    title: "Check log",
+  },
+];
+---
+
+<nav class="navbar navbar-expand-lg navbar-dark bg-primary">
+  <div class="container-fluid">
+    <button
+      class="navbar-toggler"
+      type="button"
+      data-bs-toggle="collapse"
+      data-bs-target="#navbarNavAltMarkup"
+    >
+      <span class="navbar-toggler-icon"></span>
+    </button>
+    <a class="navbar-brand" href="#">Stats</a>
+    <div
+      class="navbar-collapse collapse w-100 order-1 order-md-0 dual-collapse2"
+      id="navbarNavAltMarkup"
+    >
+      <ul class="navbar-nav" id="navbarNav">
+        {
+          links.map((l) => (
+            <li class="nav-item">
+              <a
+                class:list={[
+                  "nav-link",
+                  {
+                    active: Array.isArray(l.href)
+                      ? l.href.includes(Astro.url.pathname)
+                      : l.href === Astro.url.pathname,
+                  },
+                ]}
+                href={Array.isArray(l.href) ? l.href[0] : l.href}
+              >
+                {l.title}
+              </a>
+            </li>
+          ))
+        }
+      </ul>
+    </div>
+  </div>
+</nav>

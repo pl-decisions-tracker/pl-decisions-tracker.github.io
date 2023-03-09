@@ -1,0 +1,82 @@
+---
+type Props = {
+  searchClass: string;
+  valueClass: string;
+  filterValues: string[];
+  gridId: string;
+};
+
+const { searchClass, valueClass, filterValues, gridId } = Astro.props;
+---
+
+<select
+  class="form-select"
+  name={`${searchClass}Drop`}
+  id={`${searchClass}Drop`}
+>
+  <option selected></option>
+  {
+    filterValues.map((f)=>(
+      <option value={f}>{f}</option>
+    ))
+  }
+</select>
+
+<script is:inline="true" define:vars={{ searchClass, valueClass, gridId }}>
+  window.addEventListener("DOMContentLoaded", () => {
+    document
+      .querySelector(`#${searchClass}Drop`)
+      .addEventListener("input", (e) => {
+          const clonedGrid = document.getElementById(gridId).cloneNode(true);
+          const valueElements = clonedGrid.getElementsByClassName(searchClass);
+          if(valueElements.length === 0){
+            throw new Error(`HTML Elements with class '${searchClass}' not found`);
+          }
+          for (let index = 0; index < valueElements.length; index++) {
+            const currentElement = valueElements.item(index);
+            const currentValueEl = currentElement.getElementsByClassName(valueClass) ;
+            if(currentValueEl.length !== 1){
+              throw new Error(`There should be only 1 div with class ${valueClass} inside each ${searchClass} element, but found ${currentValueEl.length}`);
+            }
+            if(currentValueEl.item(0).innerText.trim() ===e.target.value || e.target.value===""){
+              currentElement.classList.remove('d-none');
+              currentElement.classList.remove('filtered');
+              currentElement.classList.add('d-flex');
+            }else{
+              currentElement.classList.remove('d-flex');
+              currentElement.classList.add('filtered');
+              currentElement.classList.add('d-none');
+            }
+          }
+          for (let index = 10; index >=0 ; index--) {
+            const nestedFilterNodes = document.evaluate(
+              `//div[contains(@class,'filter-container') and count(ancestor::div[contains(@class,'filter-container')]) = ${index} and ./div/div[contains(@class,'filter-container')]]`,
+              clonedGrid,
+              null,
+              XPathResult.UNORDERED_NODE_SNAPSHOT_TYPE,
+              null
+            );
+            for(let sIndex = 0; sIndex < nestedFilterNodes.snapshotLength; sIndex++){
+              let currentFilterNode = nestedFilterNodes.snapshotItem(sIndex);
+              const visibleNodeCount = document.evaluate(
+                "count(./div/div[contains(@class,'d-flex') and contains(@class,'filter-container')])",
+                currentFilterNode,
+                null,
+                XPathResult.NUMBER_TYPE,
+                null
+              );
+              if(visibleNodeCount.numberValue === 0){
+                currentFilterNode.classList.remove('d-flex');
+                currentFilterNode.classList.add('d-none');
+              } else {
+                if(!currentFilterNode.classList.contains("filtered")){
+                  currentFilterNode.classList.remove('d-none');
+                  currentFilterNode.classList.add('d-flex');
+                }
+              }
+            }
+          }
+          document.getElementById(gridId).parentNode.replaceChild(clonedGrid, document.getElementById(gridId));
+      });
+  });
+</script>
