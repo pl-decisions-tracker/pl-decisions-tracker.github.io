@@ -19,6 +19,12 @@
       "name": "Launch Edge against localhost",
       "url": "http://localhost:5500",
       "webRoot": "${workspaceFolder}"
+    },
+    {
+      "command": "./astro-pl-tracker/node_modules/.bin/astro dev",
+      "name": "Development server",
+      "request": "launch",
+      "type": "node-terminal"
     }
   ]
 }

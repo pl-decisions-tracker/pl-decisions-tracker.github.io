@@ -193,7 +193,7 @@ const currentYear = parseInt($.env.YEAR) || currentDate.getUTCFullYear();
 const currentTimestamp = $.env.YEAR
   ? Date.UTC(parseInt($.env.YEAR), 11, 31, 23, 59, 0)
   : currentDate.valueOf();
-const sqlLiteConnection = new sqlite3.Database("data/sqlite/tracker.db");
+const sqlLiteConnection = new sqlite3.Database("astro-pl-tracker/prisma/tracker.db");
 await setupTrackerDatabase(sqlLiteConnection);
 $.env.NODE_TLS_REJECT_UNAUTHORIZED = 0;
 const updatesUrl = `https://migracje.gov.pl/wp-json/udscmap/v1/decisions/poland?groupBy=&fields=total&orderBy=${randomSuffix}&year=${currentYear}`;

@@ -1,0 +1,168 @@
+---
+import { PrismaClient } from "@prisma/client";
+import MainLayout from "../layouts/MainLayout.astro";
+import SearchFilter from "../components/SearchFilter.astro";
+import DropFilter from "../components/DropFilter.astro";
+const prisma = new PrismaClient();
+const applications = await prisma.applications.findMany({
+  include: {
+    caseTypeObj: true,
+    updateObj: true,
+  },
+  where: {
+    countryObj: {
+      code: "RU",
+    },
+  },
+  orderBy: [
+    {
+      updateObj: {
+        timestamp: "asc",
+      },
+    },
+    {
+      caseType: "asc",
+    },
+  ],
+});
+prisma.$disconnect();
+interface CaseTypeRecord {
+  total: number;
+  count: number;
+}
+interface DateRecord {
+  total: number;
+  count: number;
+  caseTypes: {
+    [key: string]: CaseTypeRecord;
+  };
+}
+interface FinalObjectType {
+  [key: string]: DateRecord;
+}
+const caseTypeSet = new Set<string>();
+const finalObject: FinalObjectType = applications.reduce((acc, curr) => {
+  const currentDate = curr.updateObj.timestamp.valueOf();
+  const currentCaseType = curr.caseTypeObj.type;
+  caseTypeSet.add(currentCaseType);
+  if (!acc.hasOwnProperty(currentDate)) {
+    acc[currentDate] = { total: 0, count: 0, caseTypes: {} };
+  }
+  if (
+    !acc[currentDate].caseTypes.hasOwnProperty(
+      currentCaseType
+    )
+  ) {
+    acc[currentDate].caseTypes[currentCaseType] = {
+      total: 0,
+      count: 0,
+    };
+  }
+
+  acc[currentDate].total += curr.count;
+  acc[currentDate].count++;
+  acc[currentDate].caseTypes[currentCaseType].total +=
+    curr.count;
+  acc[currentDate].caseTypes[currentCaseType].count++;
+  return acc;
+}, {} as FinalObjectType);
+---
+
+<MainLayout>
+  <strong
+    >Количество заявлений поданных на определённю дату. Данное количество
+    считается от начала года и сбрасывается 1 января
+  </strong>
+  <div class="d-flex flex-nowrap flex-column p-2" id="applicationsTable">
+    <div
+      class="d-flex flex-nowrap align-items-stretch flex-row"
+      style="position: -webkit-sticky; position: sticky; top: -10px; background: white; z-index: 10"
+    >
+      <div class="border p-2" style="width: 6.4em">Дата</div>
+      <div class="border p-2" style="width: 18.7em">Тип дела</div>
+      <div class="border p-2" style="width: 6.6em">Количество</div>
+      <div class="border p-2" style="width: 4.6em">Сумма по дате</div>
+    </div>
+    <div
+      class="d-flex flex-nowrap align-items-stretch flex-row"
+      style="position: -webkit-sticky; position: sticky; top: 56px; background: white; z-index: 10"
+    >
+      <div class="border p-1" style="width: 6.4em">
+        <SearchFilter
+          searchClass="applicationDateFilter"
+          valueClass="dateValue"
+          gridId="gridData"
+        />
+      </div>
+      <div class="border p-1" style="width: 18.7em">
+        <DropFilter
+          searchClass="applicationCaseFilter"
+          valueClass="caseValue"
+          filterValues={Array.from(caseTypeSet)}
+          gridId="gridData"
+        />
+      </div>
+      <div class="border p-2" style="width: 6.6em"></div>
+      <div class="border p-2" style="width: 4.6em"></div>
+    </div>
+    <div id="gridData">
+      {
+        Object.keys(finalObject)
+          .sort()
+          .map((date, dateIdx) => (
+            <div
+              class="d-flex flex-nowrap align-items-stretch flex-row applicationDateFilter filter-container"
+            >
+              <div class="border p-2 dateValue" style="width: 6.4em">
+                <span style="position: -webkit-sticky; position: sticky; top: 105px;">
+                  {`${new Date(parseInt(date)).getUTCFullYear()}-${(
+                    new Date(parseInt(date)).getUTCMonth() + 1
+                  )
+                    .toString()
+                    .padStart(2, "0")}-${new Date(parseInt(date))
+                    .getUTCDate()
+                    .toString()
+                    .padStart(2, "0")}`}
+                </span>
+              </div>
+                      <div class="d-flex flex-nowrap flex-column">
+                        {Object.keys(
+                          finalObject[date].caseTypes
+                        ).map((ct, ctIdx) => (
+                          <div
+                            class="d-flex flex-nowrap align-items-stretch flex-row applicationCaseFilter filter-container"
+                          >
+                            <div
+                              class="border p-2 caseValue"
+                              style="width: 18.7em"
+                            >
+                              <span style="position: -webkit-sticky; position: sticky; top: 105px;">
+                                {ct}
+                              </span>
+                            </div>
+                            <div class="border p-2" style="width: 6.6em">
+                              {
+                                finalObject[date].caseTypes[
+                                  ct
+                                ].total
+                              }
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+              <div class="border p-2" style="width: 4.6em">
+                <span style="position: -webkit-sticky; position: sticky; top: 105px;">
+                  {finalObject[date].total}
+                </span>
+              </div>
+            </div>
+          ))
+      }
+    </div>
+  </div>
+  <script
+    is:inline="true"
+    src="https://cdn.jsdelivr.net/npm/bootstrap@5/dist/js/bootstrap.bundle.min.js"
+  ></script>
+  <script slot="body-script"></script>
+</MainLayout>

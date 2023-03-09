@@ -1,0 +1,40 @@
+---
+import YearOverview from "../components/YearOverview.astro";
+import MainLayout from "../layouts/MainLayout.astro";
+import { PrismaClient } from "@prisma/client";
+
+export async function getStaticPaths() {
+  const prisma = new PrismaClient();
+  const years = await prisma.updates
+    .findMany({
+      select: {
+        timestamp: true,
+      },
+      where: {
+        OR: [
+          {
+            dataUpdated: {
+              equals: 1,
+            },
+          },
+          {
+            dataUpdated: {
+              equals: 2,
+            },
+          },
+        ],
+      }
+    })
+    .then((res) =>
+      Array.from(new Set(res.map((t) => t.timestamp.getUTCFullYear()))).sort()
+    );
+  await prisma.$disconnect();
+  return years.map((y) => ({ params: { year: y } }));
+}
+
+const { year } = Astro.params;
+---
+
+<MainLayout>
+  <YearOverview year={parseInt(year)} />
+</MainLayout>

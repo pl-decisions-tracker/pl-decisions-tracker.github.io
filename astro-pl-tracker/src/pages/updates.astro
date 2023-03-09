@@ -1,0 +1,92 @@
+---
+import { PrismaClient } from "@prisma/client";
+import MainLayout from "../layouts/MainLayout.astro";
+
+type Props = {};
+const {} = Astro.props;
+
+const prisma = new PrismaClient();
+const updates = await prisma.updates.findMany({
+  include: {
+    dataUpdatedObj: true,
+  },
+  orderBy: [
+    {
+      timestamp: "asc",
+    },
+  ],
+});
+await prisma.$disconnect();
+---
+
+<MainLayout>
+  <h5>Журнал проверки обновлений</h5>
+  Каждодневное наблюдения ведутся с 10 августа 2022 года. Данные до этой даты доступны
+  только в виде итоговых годовых цифр.<br />
+  В 2022 году наблюдения велись только по признаку заявителя с гражданством RU. <br
+  />
+  С 2023 года наблюдения ведутся за заявителями с любым гражданством, однако интерфейс
+  пока что показывает только граждан RU. <br />
+  Возможные статусы:
+  <table class="table table-borderless w-auto table-sm">
+    <tbody
+      ><tr>
+        <td><strong>No data</strong></td>
+        <td
+          >Проверка сайта mgp прошла успешно, но новых данных с момента
+          последней проверки не поступило</td
+        >
+      </tr>
+      <tr>
+        <td><strong>Regular update</strong></td>
+        <td>Проверка прошла успешно, появились новые данные</td>
+      </tr>
+      <tr>
+        <td><strong>Initial upadte</strong></td>
+        <td
+          >Проверка прошла успешно, появилось самое первое обновление в текущем
+          году</td
+        >
+      </tr>
+      <tr>
+        <td><strong>Year closure</strong></td>
+        <td
+          >Проверка прошла не в указанную дату, а позднее. Используется для
+          получения финальных данных за указанный год</td
+        >
+      </tr></tbody
+    >
+  </table>
+  <table class="table w-auto">
+    <thead>
+      <th>Дата проверки</th>
+      <th>Результат проверки</th>
+    </thead>
+    <tbody>
+      {
+        updates.map((u) => (
+          <tr>
+            <td>{`${u.timestamp.getUTCFullYear()}-${(
+              u.timestamp.getUTCMonth() + 1
+            )
+              .toString()
+              .padStart(2, "0")}-${u.timestamp
+              .getUTCDate()
+              .toString()
+              .padStart(2, "0")} ${u.timestamp
+              .getUTCHours()
+              .toString()
+              .padStart(2, "0")}:${u.timestamp
+              .getUTCMinutes()
+              .toString()
+              .padStart(2, "0")}:${u.timestamp
+              .getUTCSeconds()
+              .toString()
+              .padStart(2, "0")}`}</td>
+            <td>{u.dataUpdatedObj.updateTypeName}</td>
+          </tr>
+        ))
+      }
+    </tbody>
+  </table>
+</MainLayout>

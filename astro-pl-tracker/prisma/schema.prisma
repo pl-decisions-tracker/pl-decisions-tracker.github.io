@@ -1,0 +1,102 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model applications {
+  id             Int         @id @default(autoincrement())
+  dateId         Int
+  updateObj      updates     @relation(fields: [dateId], references: [dateId])
+  institution    Int
+  institutionObj institution @relation(fields: [institution], references: [id])
+  country        Int
+  countryObj     country     @relation(fields: [country], references: [id])
+  caseType       Int
+  caseTypeObj    caseType    @relation(fields: [caseType], references: [id])
+  count          Int
+}
+
+model caseType {
+  id           Int            @id @default(autoincrement())
+  type         String
+  applications applications[]
+  decisions    decisions[]
+}
+
+model country {
+  id           Int            @id @default(autoincrement())
+  name         String
+  code         String
+  applications applications[]
+  decisions    decisions[]
+  statuses     statuses[]
+}
+
+model decisionMarker {
+  id          Int         @id @default(autoincrement())
+  description String
+  decisions   decisions[]
+}
+
+model decisions {
+  id                Int            @id @default(autoincrement())
+  dateId            Int
+  updateObj         updates        @relation(fields: [dateId], references: [dateId])
+  institution       Int
+  institutionObj    institution    @relation(fields: [institution], references: [id])
+  country           Int
+  countryObj        country        @relation(fields: [country], references: [id])
+  caseType          Int
+  caseTypeObj       caseType       @relation(fields: [caseType], references: [id])
+  decisionMarker    Int
+  decisionMarkerObj decisionMarker @relation(fields: [decisionMarker], references: [id])
+  count             Int
+}
+
+model institution {
+  id           Int            @id @default(autoincrement())
+  name         String
+  applications applications[]
+  decisions    decisions[]
+  statuses     statuses[]
+}
+
+model statuses {
+  id             Int         @id @default(autoincrement())
+  dateId         Int
+  updateObj      updates     @relation(fields: [dateId], references: [dateId])
+  institution    Int
+  institutionObj institution @relation(fields: [institution], references: [id])
+  status         Int
+  statusObj      statuslist  @relation(fields: [status], references: [id])
+  country        Int
+  countryObj     country     @relation(fields: [country], references: [id])
+  count          Int
+}
+
+model statuslist {
+  id       Int        @id @default(autoincrement())
+  status   String
+  statuses statuses[]
+}
+
+model updateTypes {
+  updateTypeId   Int       @id @default(autoincrement())
+  updateTypeName String
+  updates        updates[]
+}
+
+model updates {
+  dateId         Int            @id @default(autoincrement())
+  timestamp      DateTime
+  decisionsTotal Int
+  dataUpdated    Int            @default(0)
+  dataUpdatedObj updateTypes    @relation(fields: [dataUpdated], references: [updateTypeId])
+  applications   applications[]
+  decisions      decisions[]
+  statuses       statuses[]
+}
