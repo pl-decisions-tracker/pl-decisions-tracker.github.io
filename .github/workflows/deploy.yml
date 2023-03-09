@@ -16,6 +16,8 @@ permissions:
 
 jobs:
   build:
+    env:
+      DATABASE_URL: "file:./tracker.db"
     runs-on: ubuntu-latest
     steps:
       - name: Checkout your repository using git
