@@ -5,9 +5,10 @@
 	"scripts": {
 		"dev": "astro dev",
 		"start": "astro dev",
-		"build": "astro build",
+		"build": "prisma generate && astro build",
 		"preview": "astro preview",
-		"astro": "astro"
+		"astro": "astro",
+    "prisma": "prisma"
 	},
 	"dependencies": {
 		"@popperjs/core": "^2.11.6",
