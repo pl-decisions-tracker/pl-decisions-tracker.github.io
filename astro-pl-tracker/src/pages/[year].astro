@@ -29,12 +29,12 @@ export async function getStaticPaths() {
       Array.from(new Set(res.map((t) => t.timestamp.getUTCFullYear()))).sort()
     );
   await prisma.$disconnect();
-  return years.map((y) => ({ params: { year: y } }));
+  return years.map((y) => ({ params: { year: y.toString() } }));
 }
 
 const { year } = Astro.params;
 ---
 
 <MainLayout>
-  <YearOverview year={parseInt(year)} />
+  <YearOverview year={parseInt(year!)} />
 </MainLayout>

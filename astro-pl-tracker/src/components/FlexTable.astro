@@ -1,0 +1,153 @@
+---
+import DropFilter from "./DropFilter.astro";
+import FlexTableData from "./FlexTableData.astro";
+import SearchFilter from "./SearchFilter.astro";
+import type { CurrentOjbectType, FinalDataType, FinalObjectType, RawDataType } from "../utils/types";
+import { getTextDivEmSize } from "../utils/texttools";
+import { get } from "../utils/datatools";
+
+type Props = {
+  rawData: RawDataType[];
+  initialState: FinalObjectType;
+};
+
+const { rawData, initialState } = Astro.props;
+
+const finalObject: FinalObjectType = rawData.reduce((acc: FinalObjectType, curr) => {
+  // Prepare DTO
+  const currObj = acc.metadata.fieldOrder.reduce((tempObj, f)=>{
+    const currentFieldRawValue = get(curr, acc.metadata.fields[f].resolver);
+    const currentFormatter = acc.metadata.fields[f].formatter;
+    const currentFieldValue = typeof currentFormatter === "function" ? currentFormatter!(currentFieldRawValue) : String.prototype.toString.call(currentFieldRawValue);
+    tempObj[f] = {
+      name: currentFieldValue,
+      total: 0,
+    }
+    return tempObj
+  },{} as CurrentOjbectType)
+  //Data
+  let currentFieldObject: FinalDataType = acc.data;
+  for(let fieldIndex = 0; fieldIndex < acc.metadata.fieldOrder.length; fieldIndex++){
+    const f = acc.metadata.fieldOrder[fieldIndex];
+    if(currentFieldObject === null || currentFieldObject === undefined){
+      throw new Error(`current field object for field ${f} cant be null or undefinde`)
+    }
+    if(!currentFieldObject.hasOwnProperty(currObj[f].name)){
+      currentFieldObject[currObj[f].name] = {
+        field: f,
+        total: curr.count,
+        count: 1,
+      }
+      if(fieldIndex < acc.metadata.fieldOrder.length-1){
+        currentFieldObject[currObj[f].name].children = {}
+      }
+    } else {
+      currentFieldObject[currObj[f].name].total += curr.count;
+      currentFieldObject[currObj[f].name].count++;
+    }
+    currObj[f].total = currentFieldObject[currObj[f].name].total;
+    currentFieldObject = currentFieldObject[currObj[f].name].children!;
+  }
+  // Metadata
+  Object.keys(acc.metadata.fields).forEach((f) => {
+    const emSize = getTextDivEmSize(currObj[f].name);
+    const totalEmSize = getTextDivEmSize(currObj[f].total.toString());
+    if (acc.metadata.fields[f].maxWidth < emSize) {
+      acc.metadata.fields[f].maxWidth = emSize;
+    }
+    if (acc.metadata.fields[f].valueMaxWidth < totalEmSize) {
+      acc.metadata.fields[f].valueMaxWidth = totalEmSize;
+    }
+    if (
+      acc.metadata?.filters?.[f].type === "drop" &&
+      !acc.metadata.fields[f].values.some((v) => v === currObj[f].name)
+    ) {
+      acc.metadata.fields[f].values.push(currObj[f].name);
+    }
+  });
+  return acc;
+}, initialState);
+---
+
+<div
+  class="d-flex flex-nowrap flex-column p-2 align-items-baseline"
+  id={`${finalObject.metadata.dataName}Table`}
+>
+  <div
+    id="gridHeader"
+    class="position-sticky top-0 bg-white"
+    style="z-index: 10"
+  >
+    <div class="d-flex flex-nowrap align-items-stretch flex-row">
+      {
+        finalObject.metadata.fieldOrder.map((f) => (
+          <div
+            class="border p-2"
+            style={`width: ${finalObject.metadata.fields[f].maxWidth}em; overflow: hidden`}
+          >
+            {finalObject.metadata.fields[f].title}
+          </div>
+        ))
+      }
+      {
+        finalObject.metadata.fieldOrder
+          .slice(0)
+          .reverse()
+          .map((f) => (
+            <div
+              class="border p-2"
+              style={`width: ${finalObject.metadata.fields[f].valueMaxWidth}em`}
+            >
+              {finalObject.metadata.fields[f].valueTitle}
+            </div>
+          ))
+      }
+    </div>
+    <div class="d-flex flex-nowrap align-items-stretch flex-row">
+      {
+        finalObject.metadata.fieldOrder.map((f) => (
+          <div
+            class="border p-1"
+            style={`width: ${finalObject.metadata.fields[f].maxWidth}em`}
+          >
+            {finalObject.metadata.filters.hasOwnProperty(f)
+              ? {
+                  search: (
+                    <SearchFilter
+                      searchClass={`${f}Filter`}
+                      valueClass={`${f}Value`}
+                      gridId="gridData"
+                    />
+                  ),
+                  drop: (
+                    <DropFilter
+                      searchClass={`${f}Filter`}
+                      valueClass={`${f}Value`}
+                      filterValues={finalObject.metadata.fields[f].values}
+                      gridId="gridData"
+                    />
+                  ),
+                }[finalObject.metadata.filters[f].type]
+              : null}
+          </div>
+        ))
+      }
+      {
+        finalObject.metadata.fieldOrder
+          .slice(0)
+          .reverse()
+          .map((f) => (
+            <div
+              class="border p-2"
+              style={`width: ${finalObject.metadata.fields[f].valueMaxWidth}em`}
+            ></div>
+          ))
+      }
+    </div>
+  </div>
+  <div id="gridData">
+    <FlexTableData finalObject={finalObject} />
+  </div>
+</div>
+
+<style></style>
