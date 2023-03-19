@@ -1,0 +1,41 @@
+---
+import type { FinalObjectType } from '../utils/types';
+
+type Props = {finalObject: FinalObjectType}
+const {finalObject} = Astro.props
+
+---
+  <div class="d-flex flex-nowrap flex-column">
+    {
+      Object.keys(finalObject.data)
+        .sort()
+        .map((rec, dateIdx) => (
+          <div
+            class:list={[
+              "d-flex",
+              "flex-nowrap",
+              "align-items-stretch",
+              "flex-row",
+              `${finalObject.data[rec].field}Filter`,
+              "filter-container",
+            ]}
+          >
+            <div class:list={[
+              "border",
+              "p-2",
+              `${finalObject.data[rec].field}Value`,
+            ]} style={`width: ${finalObject.metadata.fields[finalObject.data[rec].field].maxWidth}em`}>
+              <span class:list={{"position-sticky": finalObject.data[rec].hasOwnProperty('children')}} style={finalObject.data[rec].hasOwnProperty('children') ? "top: 110px;" : null}>
+                {rec}
+              </span>
+            </div>
+            {finalObject.data[rec].hasOwnProperty('children') ? (<Astro.self finalObject={{metadata: finalObject.metadata, data: finalObject.data[rec].children}} />) : <></>}
+            <div class="border p-2" style={`width: ${finalObject.metadata.fields[finalObject.data[rec].field].valueMaxWidth}em`}>
+              <span class:list={{"position-sticky": finalObject.data[rec].hasOwnProperty('children')}} style={finalObject.data[rec].hasOwnProperty('children') ? "top: 110px;" : null}>
+                {finalObject.data[rec].total}
+              </span>
+            </div>
+          </div>
+        ))
+    }
+  </div>
