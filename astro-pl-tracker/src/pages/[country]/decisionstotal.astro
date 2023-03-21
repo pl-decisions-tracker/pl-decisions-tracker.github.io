@@ -1,0 +1,15 @@
+---
+import DecisionsTotalComponent from "../../components/DecisionsTotalComponent.astro";
+import MainLayout from "../../layouts/MainLayout.astro";
+import { getCountryRoutes } from "../../utils/contryRoutes";
+
+export async function getStaticPaths() {
+  return getCountryRoutes();
+}
+const { country } = Astro.params;
+
+---
+
+<MainLayout>
+  <DecisionsTotalComponent countryParam={country!} />
+</MainLayout>

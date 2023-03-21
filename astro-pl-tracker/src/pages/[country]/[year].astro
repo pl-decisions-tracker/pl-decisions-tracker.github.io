@@ -1,7 +1,8 @@
 ---
-import YearOverview from "../components/YearOverview.astro";
-import MainLayout from "../layouts/MainLayout.astro";
+import YearOverview from "../../components/YearOverview.astro";
+import MainLayout from "../../layouts/MainLayout.astro";
 import { PrismaClient } from "@prisma/client";
+import { getCountryRoutes } from "../../utils/contryRoutes";
 
 export async function getStaticPaths() {
   const prisma = new PrismaClient();
@@ -29,12 +30,19 @@ export async function getStaticPaths() {
       Array.from(new Set(res.map((t) => t.timestamp.getUTCFullYear()))).sort()
     );
   await prisma.$disconnect();
-  return years.map((y) => ({ params: { year: y.toString() } }));
+  const countries = getCountryRoutes();
+  let routeArray = [];
+  for (const c of countries) {
+    for (const y of years) {
+      routeArray.push({ params: { year: y.toString(), country: c.params.country } })
+    }
+  }
+  return routeArray;
 }
 
-const { year } = Astro.params;
+const { year, country } = Astro.params;
 ---
 
 <MainLayout>
-  <YearOverview year={parseInt(year!)} countryParam="RU" />
+  <YearOverview year={parseInt(year!)} countryParam={ country! } />
 </MainLayout>
