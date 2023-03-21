@@ -5,7 +5,13 @@ import FlexTable from "../components/FlexTable.astro";
 import type { FinalObjectType } from "../utils/types";
 import { getLongestHalfSize } from "../utils/texttools";
 import { formatDate } from "../utils/datatools";
-import ApplicationsTotalComponent from "../components/ApplicationsTotalComponent.astro";
+
+type Props = {
+  countryParam: string;
+};
+
+const { countryParam } = Astro.props;
+
 const prisma = new PrismaClient();
 const applicationsTotal = await prisma.applications.findMany({
   include: {
@@ -14,7 +20,7 @@ const applicationsTotal = await prisma.applications.findMany({
   },
   where: {
     countryObj: {
-      code: "RU",
+      code: countryParam.toUpperCase(),
     },
   },
   orderBy: [
@@ -74,6 +80,10 @@ Object.keys(initialState.metadata.fields).forEach((f) => {
 
 ---
 
-<MainLayout>
-  <ApplicationsTotalComponent countryParam="ru" />
-</MainLayout>
+<>
+  <strong
+    >Количество заявлений поданных на определённю дату. Данное количество
+    считается от начала года и сбрасывается 1 января
+  </strong>
+  <FlexTable rawData={applicationsTotal} initialState={initialState} />
+</>

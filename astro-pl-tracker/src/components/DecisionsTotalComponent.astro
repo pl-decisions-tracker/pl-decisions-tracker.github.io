@@ -1,20 +1,26 @@
 ---
 import { PrismaClient } from "@prisma/client";
-import MainLayout from "../layouts/MainLayout.astro";
 import FlexTable from "../components/FlexTable.astro";
-import type { FinalObjectType } from "../utils/types";
+import type {  FinalObjectType } from "../utils/types";
 import { getLongestHalfSize } from "../utils/texttools";
 import { formatDate } from "../utils/datatools";
-import ApplicationsTotalComponent from "../components/ApplicationsTotalComponent.astro";
+
+type Props = {
+  countryParam: string;
+};
+
+const { countryParam } = Astro.props;
+
 const prisma = new PrismaClient();
-const applicationsTotal = await prisma.applications.findMany({
+const decisionsTotal = await prisma.decisions.findMany({
   include: {
     caseTypeObj: true,
+    decisionMarkerObj: true,
     updateObj: true,
   },
   where: {
     countryObj: {
-      code: "RU",
+      code: countryParam.toUpperCase(),
     },
   },
   orderBy: [
@@ -26,13 +32,16 @@ const applicationsTotal = await prisma.applications.findMany({
     {
       caseType: "asc",
     },
+    {
+      decisionMarker: "asc",
+    },
   ],
 });
 prisma.$disconnect();
 let initialState = {
   data: {},
   metadata: {
-    dataName: "applicationsTotal",
+    dataName: "decisionsTotal",
     fields: {
       date: {
         title: "Дата",
@@ -45,18 +54,27 @@ let initialState = {
       },
       caseType: {
         title: "Тип дела",
-        valueTitle: "Количество",
+        valueTitle: "Сумма по типу",
         maxWidth: 0,
         valueMaxWidth: 0,
         values: [],
         resolver: "caseTypeObj.type",
       },
+      decision: {
+        title: "Решение",
+        valueTitle: "Количество",
+        maxWidth: 0,
+        valueMaxWidth: 0,
+        values: [],
+        resolver: "decisionMarkerObj.description",
+      },
     },
     filters: {
       date: { type: "search" },
       caseType: { type: "drop" },
+      decision: { type : "drop" },
     },
-    fieldOrder: ["date", "caseType"],
+    fieldOrder: ["date", "caseType", "decision"],
   },
 } as FinalObjectType;
 Object.keys(initialState.metadata.fields).forEach((f) => {
@@ -71,9 +89,12 @@ Object.keys(initialState.metadata.fields).forEach((f) => {
     initialState.metadata.fields[f].valueMaxWidth = valueTitleEmSize;
   }
 });
-
 ---
 
-<MainLayout>
-  <ApplicationsTotalComponent countryParam="ru" />
-</MainLayout>
+<>
+  <strong
+    >Количество заявлений поданных на определённю дату. Данное количество
+    считается от начала года и сбрасывается 1 января
+  </strong>
+  <FlexTable rawData={decisionsTotal} initialState={initialState} />
+</>

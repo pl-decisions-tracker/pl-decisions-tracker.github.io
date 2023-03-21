@@ -1,20 +1,25 @@
 ---
 import { PrismaClient } from "@prisma/client";
-import MainLayout from "../layouts/MainLayout.astro";
+import { formatDate } from "../utils/datatools";
+import { getLongestHalfSize } from "../utils/texttools";
 import FlexTable from "../components/FlexTable.astro";
 import type { FinalObjectType } from "../utils/types";
-import { getLongestHalfSize } from "../utils/texttools";
-import { formatDate } from "../utils/datatools";
-import ApplicationsTotalComponent from "../components/ApplicationsTotalComponent.astro";
+
+type Props = {
+  countryParam: string;
+};
+
+const { countryParam } = Astro.props;
+
 const prisma = new PrismaClient();
-const applicationsTotal = await prisma.applications.findMany({
+const statusesTotal = await prisma.statuses.findMany({
   include: {
-    caseTypeObj: true,
+    statusObj: true,
     updateObj: true,
   },
   where: {
     countryObj: {
-      code: "RU",
+      code: countryParam.toUpperCase(),
     },
   },
   orderBy: [
@@ -24,7 +29,7 @@ const applicationsTotal = await prisma.applications.findMany({
       },
     },
     {
-      caseType: "asc",
+      status: "asc",
     },
   ],
 });
@@ -32,7 +37,7 @@ prisma.$disconnect();
 let initialState = {
   data: {},
   metadata: {
-    dataName: "applicationsTotal",
+    dataName: "statuses",
     fields: {
       date: {
         title: "Дата",
@@ -43,20 +48,20 @@ let initialState = {
         resolver: "updateObj.timestamp",
         formatter: formatDate,
       },
-      caseType: {
-        title: "Тип дела",
+      status: {
+        title: "Статус",
         valueTitle: "Количество",
         maxWidth: 0,
         valueMaxWidth: 0,
         values: [],
-        resolver: "caseTypeObj.type",
+        resolver: "statusObj.status",
       },
     },
     filters: {
       date: { type: "search" },
-      caseType: { type: "drop" },
+      status: { type: "drop" },
     },
-    fieldOrder: ["date", "caseType"],
+    fieldOrder: ["date", "status"],
   },
 } as FinalObjectType;
 Object.keys(initialState.metadata.fields).forEach((f) => {
@@ -71,9 +76,12 @@ Object.keys(initialState.metadata.fields).forEach((f) => {
     initialState.metadata.fields[f].valueMaxWidth = valueTitleEmSize;
   }
 });
-
 ---
 
-<MainLayout>
-  <ApplicationsTotalComponent countryParam="ru" />
-</MainLayout>
+<>
+  <strong
+    >Количество заявлений поданных на определённю дату. Данное количество
+    считается от начала года и сбрасывается 1 января
+  </strong>
+  <FlexTable rawData={statusesTotal} initialState={initialState} />
+</>

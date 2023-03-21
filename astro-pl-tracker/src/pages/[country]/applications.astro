@@ -1,0 +1,12 @@
+---
+import ApplicationsComponent from "../../components/ApplicationsComponent.astro";
+import MainLayout from "../../layouts/MainLayout.astro";
+import { getCountryRoutes } from "../../utils/contryRoutes";
+export async function getStaticPaths() {
+  return getCountryRoutes();
+}
+const { country } = Astro.params;
+---
+<MainLayout >
+  <ApplicationsComponent countryParam={country!} />
+</MainLayout>

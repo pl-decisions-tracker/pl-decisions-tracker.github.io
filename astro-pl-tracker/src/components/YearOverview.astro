@@ -3,9 +3,10 @@ import { PrismaClient } from "@prisma/client";
 import type { ChartData } from "chart.js";
 type Props = {
   year: number;
+  countryParam: string;
 };
 
-const { year } = Astro.props;
+const { year, countryParam } = Astro.props;
 const prisma = new PrismaClient();
 let data;
 let years;
@@ -45,7 +46,7 @@ try {
         },
       },
       countryObj: {
-        code: "RU",
+        code: countryParam.toUpperCase(),
       },
     },
     include: {
@@ -267,7 +268,7 @@ const finalObject = data?.reduce((acc: finalObjectType, curr) => {
       years?.map((y, idx) => (
         <>
           <div class="mx-0 p-2">
-            <a href={`/${y.toString()}.html`}>{y.toString()}</a>
+            <a href={`./${y.toString()}.html`}>{y.toString()}</a>
           </div>
           {idx < years.length - 1 ? <div class="mx-0 p-2"> | </div> : ""}
         </>
