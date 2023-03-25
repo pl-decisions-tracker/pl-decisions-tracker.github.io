@@ -12,7 +12,7 @@ const updates = await prisma.updates.findMany({
   },
   orderBy: [
     {
-      timestamp: "asc",
+      timestamp: "desc",
     },
   ],
 });
