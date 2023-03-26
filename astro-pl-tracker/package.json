@@ -8,7 +8,7 @@
 		"build": "prisma generate && astro build",
 		"preview": "astro preview",
 		"astro": "astro",
-    "prisma": "prisma"
+		"prisma": "prisma"
 	},
 	"dependencies": {
 		"@popperjs/core": "^2.11.6",
@@ -20,6 +20,7 @@
 	},
 	"devDependencies": {
 		"@fullhuman/postcss-purgecss": "^5.0.0",
+		"@types/node": "^18.15.10",
 		"prisma": "^4.11.0",
 		"sass": "^1.59.3",
 		"string-pixel-width": "^1.11.0",
