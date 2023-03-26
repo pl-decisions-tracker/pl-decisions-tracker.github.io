@@ -1,7 +1,7 @@
 ---
-import YearOverview from "../../components/YearOverview.astro";
-import MainLayout from "../../layouts/MainLayout.astro";
-import { getCountryRoutes } from "../../utils/contryRoutes";
+import YearOverview from "../../../components/YearOverview.astro";
+import MainLayout from "../../../layouts/MainLayout.astro";
+import { getCountryRoutes } from "../../../utils/contryRoutes";
 
 export async function getStaticPaths() {
   return getCountryRoutes();
