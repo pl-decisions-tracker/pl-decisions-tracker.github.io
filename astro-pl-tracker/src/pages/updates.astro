@@ -1,11 +1,10 @@
 ---
-import { PrismaClient } from "@prisma/client";
+import prisma from '../utils/prisma';
 import MainLayout from "../layouts/MainLayout.astro";
 
 type Props = {};
 const {} = Astro.props;
 
-const prisma = new PrismaClient();
 const updates = await prisma.updates.findMany({
   include: {
     dataUpdatedObj: true,

@@ -1,5 +1,5 @@
 ---
-import { PrismaClient } from "@prisma/client";
+import prisma from '../utils/prisma';
 import type { ChartData } from "chart.js";
 type Props = {
   year: number;
@@ -7,7 +7,6 @@ type Props = {
 };
 
 const { year, countryParam } = Astro.props;
-const prisma = new PrismaClient();
 let data;
 let years;
 try {

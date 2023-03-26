@@ -1,5 +1,5 @@
 ---
-import { PrismaClient } from "@prisma/client";
+import prisma from '../utils/prisma';
 import MainLayout from "../layouts/MainLayout.astro";
 import FlexTable from "../components/FlexTable.astro";
 import type { FinalObjectType } from "../utils/types";
@@ -12,7 +12,6 @@ type Props = {
 
 const { countryParam } = Astro.props;
 
-const prisma = new PrismaClient();
 const applications = await prisma.applications.findMany({
   include: {
     caseTypeObj: true,

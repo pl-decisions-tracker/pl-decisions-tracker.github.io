@@ -1,7 +1,6 @@
 ---
-import { PrismaClient } from "@prisma/client";
+import prisma from '../utils/prisma';
 
-const prisma = new PrismaClient();
 let scriptInjectData = {
   lastCheck: 0,
   lastTwoUpdates: [0, 0],
