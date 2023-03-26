@@ -1,8 +1,14 @@
 ---
+import { countries } from '../utils/contryRoutes';
 type Props = {};
 
 const {} = Astro.props;
-const links = [
+interface Link {
+  href: string | string[];
+  title: string;
+  absolute: boolean;
+}
+const links: Link[] = [
   {
     href: [
       "/",
@@ -13,42 +19,73 @@ const links = [
       "/2025.html",
     ],
     title: "Main",
+    absolute: false,
   },
   {
     href: "/decisions.html",
     title: "Detailed Decisions",
+    absolute: false,
   },
   {
     href: "/applications.html",
     title: "Detailed Applications",
+    absolute: false,
   },
   {
     href: "/statuses.html",
     title: "Detailed Statuses",
+    absolute: false,
   },
   {
     href: "/decisionstotal.html",
     title: "Decisions Totals",
+    absolute: false,
   },
   {
     href: "/applicationstotal.html",
     title: "Applications Totals",
+    absolute: false,
   },
   {
     href: "/statusestotal.html",
     title: "Statuses Totals",
+    absolute: false,
   },
   {
     href: "/updates.html",
     title: "Check log",
+    absolute: true,
   },
 ];
+const countryMatch = Astro.url.pathname.match(/^(\/([^\/]*))\//);
+let currentCountry: string, currentCountryPath: string;
+if(Array.isArray(countryMatch)){
+  currentCountry = countryMatch[2];
+  currentCountryPath = countryMatch[1]
+}
+else{
+  currentCountry = "ru";
+  currentCountryPath = "";
+}
+const pathMatch = Astro.url.pathname.match(/(\/[^\/]*)$/);
+if(!Array.isArray(pathMatch)){
+  throw new Error(`Path ${Astro.url.pathname} does not match regexp (\/[^\/]*)$ to find current page`)
+}
+const currentPath = pathMatch[1];
+const currentPathAbsolute = links.filter((l)=>Array.isArray(l.href) ? l.href.includes(currentPath) : l.href === currentPath)[0].absolute
+
 ---
 
 <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
   <div class="container-fluid">
-    
-    <a class="navbar-brand" href="#">Stats</a>
+    <button
+    class="navbar-toggler"
+    type="button"
+    data-bs-toggle="collapse"
+    data-bs-target="#navBarLanguages"
+  >
+  {currentCountry.toLocaleUpperCase()}
+  </button>
     <div
       class="navbar-collapse collapse w-100 order-1 order-md-0 dual-collapse2"
       id="navbarNavAltMarkup"
@@ -62,11 +99,11 @@ const links = [
                   "nav-link",
                   {
                     active: Array.isArray(l.href)
-                      ? l.href.includes(Astro.url.pathname)
-                      : l.href === Astro.url.pathname,
+                      ? l.href.includes(currentPath)
+                      : l.href === currentPath
                   },
                 ]}
-                href={Array.isArray(l.href) ? l.href[0] : l.href}
+                href={`${l.absolute ? "" : currentCountryPath}${Array.isArray(l.href) ? l.href[0] : l.href}`}
               >
                 {l.title}
               </a>
@@ -75,6 +112,30 @@ const links = [
         }
       </ul>
     </div>
+    <div
+    class="navbar-collapse collapse order-1 order-md-0 dual-collapse2"
+    id="navBarLanguages"
+  >
+    <ul class="navbar-nav" id="navbarNav">
+      {
+        countries.map((c) => (
+          <li class="nav-item">
+            <a
+              class:list={[
+                "nav-link",
+                {
+                  active: currentCountry.toLocaleUpperCase() === c.code.toLocaleUpperCase()
+                },
+              ]}
+              href={`${c.path}${currentPathAbsolute ? "" : currentPath}`}
+            >
+              {c.code.toUpperCase()}
+            </a>
+          </li>
+        ))
+      }
+    </ul>
+  </div>
     <button
       class="navbar-toggler"
       type="button"
