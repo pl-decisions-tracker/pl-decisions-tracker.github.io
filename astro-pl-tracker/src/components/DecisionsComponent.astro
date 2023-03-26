@@ -1,9 +1,8 @@
 ---
-import { PrismaClient } from "@prisma/client";
-import MainLayout from "../layouts/MainLayout.astro";
+import prisma from '../utils/prisma';
 import FlexTable from "../components/FlexTable.astro";
-import type { CurrentOjbectType, FinalDataType, FinalObjectType } from "../utils/types";
-import { getTextDivEmSize, getLongestHalfSize } from "../utils/texttools";
+import type { FinalObjectType } from "../utils/types";
+import { getLongestHalfSize } from "../utils/texttools";
 import { formatDate } from "../utils/datatools";
 
 type Props = {
@@ -12,7 +11,6 @@ type Props = {
 
 const { countryParam } = Astro.props;
 
-const prisma = new PrismaClient();
 const decisions = await prisma.decisions.findMany({
   include: {
     caseTypeObj: true,

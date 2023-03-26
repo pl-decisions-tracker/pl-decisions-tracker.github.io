@@ -1,11 +1,10 @@
 ---
 import YearOverview from "../../components/YearOverview.astro";
 import MainLayout from "../../layouts/MainLayout.astro";
-import { PrismaClient } from "@prisma/client";
+import prisma from '../../utils/prisma';
 import { getCountryRoutes } from "../../utils/contryRoutes";
 
 export async function getStaticPaths() {
-  const prisma = new PrismaClient();
   const years = await prisma.updates
     .findMany({
       select: {

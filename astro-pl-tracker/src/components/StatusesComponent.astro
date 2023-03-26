@@ -1,5 +1,5 @@
 ---
-import { PrismaClient } from "@prisma/client";
+import prisma from '../utils/prisma';
 import MainLayout from "../layouts/MainLayout.astro";
 import { formatDate } from "../utils/datatools";
 import { getLongestHalfSize } from "../utils/texttools";
@@ -12,7 +12,6 @@ type Props = {
 
 const { countryParam } = Astro.props;
 
-const prisma = new PrismaClient();
 const statuses = await prisma.statuses.findMany({
   include: {
     statusObj: true,
