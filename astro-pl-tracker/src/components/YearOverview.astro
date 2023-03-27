@@ -1,82 +1,53 @@
 ---
-import prisma from '../utils/prisma';
-import type { ChartData } from "chart.js";
+import prisma from "../utils/prisma";
+import type { YearOverviewType } from "../utils/types";
+import CaseTypeYearCard from "./CaseTypeYearCard.astro";
+import YearList from "./YearList.astro";
+
 type Props = {
   year: number;
   countryParam: string;
 };
 
 const { year, countryParam } = Astro.props;
-let data;
-let years;
-try {
-  years = await prisma.updates
-    .findMany({
-      select: {
-        timestamp: true,
+const data = await prisma.decisions.findMany({
+  where: {
+    updateObj: {
+      timestamp: {
+        lt: new Date(`${year + 1}-01-01`),
+        gte: new Date(`${year}-01-01`),
       },
-      where: {
-        OR: [
-          {
-            dataUpdated: {
-              equals: 1,
-            },
-          },
-          {
-            dataUpdated: {
-              equals: 2,
-            },
-          },
-        ],
+      dataUpdated: {
+        gt: 0,
       },
-    })
-    .then((res) =>
-      Array.from(new Set(res.map((t) => t.timestamp.getUTCFullYear()))).sort()
-    );
-  data = await prisma.decisions.findMany({
-    where: {
+    },
+    countryObj: {
+      code: countryParam.toUpperCase(),
+    },
+  },
+  include: {
+    updateObj: true,
+    institutionObj: true,
+    caseTypeObj: true,
+    decisionMarkerObj: true,
+  },
+  orderBy: [
+    {
       updateObj: {
-        timestamp: {
-          lt: new Date(`${year + 1}-01-01`),
-          gte: new Date(`${year}-01-01`),
-        },
-        dataUpdated: {
-          gt: 0,
-        },
-      },
-      countryObj: {
-        code: countryParam.toUpperCase(),
+        timestamp: "asc",
       },
     },
-    include: {
-      updateObj: true,
-      institutionObj: true,
-      caseTypeObj: true,
-      decisionMarkerObj: true,
+    {
+      caseType: "asc",
     },
-    orderBy: [
-      {
-        updateObj: {
-          timestamp: "asc",
-        },
-      },
-      {
-        caseType: "asc",
-      },
-      {
-        decisionMarker: "asc",
-      },
-    ],
-  });
-} catch (error) {
-  console.log("error!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!", error);
-} finally {
-  await prisma.$disconnect();
-}
-interface colorDict {
-  [key: string]: [number, number, number];
-}
-const decisionMarkerColors: colorDict = {
+    {
+      decisionMarker: "asc",
+    },
+  ],
+});
+await prisma.$disconnect();
+
+const decisionMarkerColors: Record<string, [number, number, number]> = {
   Inna: [0, 0, 0],
   "Procedury priorytetowe lub przyspieszone": [0, 0, 0],
   "Inna - pozytywna": [0, 0, 0],
@@ -92,50 +63,36 @@ const decisionMarkerColors: colorDict = {
   "Zgoda na pobyt ze względów humanitarnych": [0, 0, 0],
   "Pozostawienie bez rozpoznania": [0, 0, 0],
 };
-interface decisionMarkerClassDict {
-  [key: string]: string;
-}
-const decisionMarkerClass: decisionMarkerClassDict = {
-  Inna: "text-dark-emphasis",
-  "Procedury priorytetowe lub przyspieszone": "text-dark-emphasis",
-  "Inna - pozytywna": "text-dark-emphasis",
-  Pozytywna: "text-success",
-  "Zgoda na pobyt tolerowany": "text-dark-emphasis",
-  Negatywna: "text-danger",
-  Wstrzymanie: "text-dark-emphasis",
-  Umorzenie: "text-info",
-  Wznowienie: "text-dark-emphasis",
-  "Wnioski bezpodstawne": "text-dark-emphasis",
-  "Ochrona uzupełniająca": "text-warning",
-  "Wnioski niedopuszczalne": "text-dark-emphasis",
-  "Zgoda na pobyt ze względów humanitarnych": "text-dark-emphasis",
-  "Pozostawienie bez rozpoznania": "text-dark-emphasis",
-};
 
-interface finalObjectType {
-  [key: string]: {
-    chartData: ChartData;
-    institutions: { [key: string]: { chartData: ChartData } };
-  };
-}
 interface helperType {
+  // Case Type
   [key: string]: {
     institutions: {
+      // Institution
       [key: string]: {
+        // Decision
         [key: string]: {
           total: number[];
         };
       };
     };
     totals: {
+      // Decision
       [key: string]: {
         total: number[];
       };
     };
+    labels: number[];
   };
 }
+
+function throwExpression(errorMessage: string): never {
+  throw new Error(errorMessage);
+}
+
 let helper: helperType = {};
-const finalObject = data?.reduce((acc: finalObjectType, curr) => {
+let isCleanStart = false;
+const finalObject = data?.reduce((acc, curr) => {
   const currentCaseType = curr.caseTypeObj.type;
   const currentDecisionMarker = curr.decisionMarkerObj.description;
   const currentInstitution = curr.institutionObj.name;
@@ -144,7 +101,7 @@ const finalObject = data?.reduce((acc: finalObjectType, curr) => {
       chartData: { labels: [], datasets: [] },
       institutions: {},
     };
-    helper[currentCaseType] = { totals: {}, institutions: {} };
+    helper[currentCaseType] = { totals: {}, institutions: {}, labels: [] };
   }
   if (
     !acc[currentCaseType].chartData.datasets.some(
@@ -200,20 +157,26 @@ const finalObject = data?.reduce((acc: finalObjectType, curr) => {
       )}, 0.5)`,
     });
   }
-  const currentDataset = acc[currentCaseType].chartData.datasets.find(
-    (d) => d.label === currentDecisionMarker
-  );
-  const currentInstDataset = acc[currentCaseType].institutions[
-    currentInstitution
-  ].chartData.datasets.find((d) => d.label === currentDecisionMarker);
-  let dataIndex = acc[currentCaseType].chartData.labels.indexOf(
-    curr.updateObj.timestamp.valueOf()
+  const currentDataset =
+    acc[currentCaseType].chartData.datasets.find(
+      (d) => d.label === currentDecisionMarker
+    ) ??
+    throwExpression(
+      `Datasets field of acc.${currentCaseType}.chartData.datasets field does not have ${currentDecisionMarker} key`
+    );
+  const currentInstDataset =
+    acc[currentCaseType].institutions[
+      currentInstitution
+    ].chartData.datasets.find((d) => d.label === currentDecisionMarker) ??
+    throwExpression(
+      `Datasets field of acc.${currentCaseType}.institutions.${currentInstitution}.chartData.datasets field does not have ${currentDecisionMarker} key`
+    );
+  let dataIndex = helper[currentCaseType].labels.findIndex(
+    (l) => l === curr.updateObj.timestamp.valueOf()
   );
   if (dataIndex === -1) {
-    dataIndex = acc[currentCaseType].chartData.labels.length;
-    acc[currentCaseType].chartData.labels.push(
-      curr.updateObj.timestamp.valueOf()
-    );
+    dataIndex = helper[currentCaseType].labels.length;
+    helper[currentCaseType].labels.push(curr.updateObj.timestamp.valueOf());
   }
   acc[currentCaseType].institutions[currentInstitution].chartData.labels =
     acc[currentCaseType].chartData.labels;
@@ -230,27 +193,47 @@ const finalObject = data?.reduce((acc: finalObjectType, curr) => {
     currentDecisionMarker
   ].total[dataIndex] = curr.count;
   if (curr.updateObj.dataUpdated === 2) {
+    if (
+      !acc[currentCaseType].chartData.labels.includes(
+        curr.updateObj.timestamp.valueOf()
+      )
+    ) {
+      acc[currentCaseType].chartData.labels.push(
+        curr.updateObj.timestamp.valueOf()
+      );
+    }
+    // check that data point is number
     if (!isNaN(currentDataset.data[dataIndex])) {
       currentDataset.data[dataIndex] += curr.count;
     } else {
       currentDataset.data[dataIndex] = curr.count;
     }
     currentInstDataset.data[dataIndex] = curr.count;
+    isCleanStart = true;
   } else {
     if (dataIndex === 0) {
-      currentDataset.data[dataIndex] = null;
-      currentInstDataset.data[dataIndex] = null;
+      isCleanStart = false;
     } else {
-      if (!isNaN(currentDataset.data[dataIndex])) {
-        currentDataset.data[dataIndex] += curr.count;
+      if (
+        !acc[currentCaseType].chartData.labels.includes(
+          curr.updateObj.timestamp.valueOf()
+        )
+      ) {
+        acc[currentCaseType].chartData.labels.push(
+          curr.updateObj.timestamp.valueOf()
+        );
+      }
+      const dataAlignedIndex = isCleanStart ? dataIndex : dataIndex - 1;
+      if (!isNaN(currentDataset.data[dataAlignedIndex])) {
+        currentDataset.data[dataAlignedIndex] += curr.count;
       } else {
-        currentDataset.data[dataIndex] =
+        currentDataset.data[dataAlignedIndex] =
           curr.count -
           helper[currentCaseType].totals[currentDecisionMarker].total[
             dataIndex - 1
           ];
       }
-      currentInstDataset.data[dataIndex] =
+      currentInstDataset.data[dataAlignedIndex] =
         curr.count -
         helper[currentCaseType].institutions[currentInstitution][
           currentDecisionMarker
@@ -258,240 +241,31 @@ const finalObject = data?.reduce((acc: finalObjectType, curr) => {
     }
   }
   return acc;
-}, {});
+}, {} as YearOverviewType);
 ---
 
 <div>
-  <div class="d-flex justify-content-center flex-wrap">
-    {
-      years?.map((y, idx) => (
-        <>
-          <div class="mx-0 p-2">
-            <a href={`./${y.toString()}.html`}>{y.toString()}</a>
-          </div>
-          {idx < years.length - 1 ? <div class="mx-0 p-2"> | </div> : ""}
-        </>
-      ))
-    }
-  </div>
+  <YearList year={year} countryParam={countryParam} />
+  <script
+    is:inline="true"
+    src="https://cdn.jsdelivr.net/npm/chart.js@4/dist/chart.umd.js"
+  ></script>
+  <script
+    is:inline="true"
+    src="https://cdn.jsdelivr.net/npm/moment@2/moment.min.js"
+  ></script>
+  <script
+    is:inline="true"
+    src="https://cdn.jsdelivr.net/npm/chartjs-adapter-moment@1/dist/chartjs-adapter-moment.min.js"
+  ></script>
   <div class="d-flex justify-content-center flex-wrap">
     {
       Object.keys(finalObject).map((caseType) => (
-        <div class="p-2">
-          <h3 class="text-center">{caseType}</h3>
-          Новых решений{" "}
-          <strong>
-            {finalObject[caseType].chartData.datasets?.reduce(
-              (acc, curr) => acc + curr.data[curr.data.length - 1],
-              0
-            )}
-          </strong>
-          из них
-          {finalObject[caseType].chartData.datasets?.map((ds) => (
-            <>
-              <strong class={decisionMarkerClass[ds.label]}>
-                {ds.data?.slice(-1)}
-              </strong>{" "}
-              {ds.label}{" "}
-            </>
-          ))}
-          <br />С начала наблюдений{" "}
-          <strong>
-            {finalObject[caseType].chartData.datasets?.reduce(
-              (acc, curr) =>
-                acc +
-                curr.data?.reduce(
-                  (dataSum, currentData) => dataSum + currentData,
-                  0
-                ),
-              0
-            )}
-          </strong>
-          из них
-          {finalObject[caseType].chartData.datasets.map((ds) => (
-            <>
-              <strong class={decisionMarkerClass[ds.label]}>
-                {ds.data?.reduce(
-                  (dataSum, currentData) => dataSum + currentData,
-                  0
-                )}
-              </strong>{" "}
-              {ds.label}{" "}
-            </>
-          ))}
-          <canvas
-            id={`${caseType.replaceAll(" ", "-").replaceAll(".", "")}-chart`}
-            width="700"
-            height="400"
-          />
-          <button
-            class="btn btn-primary"
-            type="button"
-            data-bs-toggle="collapse"
-            data-bs-target={`#${caseType
-              .replaceAll(" ", "-")
-              .replaceAll(".", "")}-institutions`}
-          >
-            Institutions
-          </button>
-          <div
-            class="p-2 collapse"
-            id={`${caseType
-              .replaceAll(" ", "-")
-              .replaceAll(".", "")}-institutions`}
-          >
-            {Object.keys(finalObject[caseType].institutions).map((inst) => (
-              <div class="p-2">
-                <h4>{inst}</h4>
-                Новых решений{" "}
-                <strong>
-                  {finalObject[caseType].institutions[inst].chartData.datasets?.reduce(
-                    (acc, curr) => acc + curr.data[curr.data.length - 1],
-                    0
-                  )}
-                </strong>
-                из них
-                {finalObject[caseType].institutions[inst].chartData.datasets?.map((ds) => (
-                  <>
-                    <strong class={decisionMarkerClass[ds.label]}>
-                      {ds.data?.slice(-1)}
-                    </strong>{" "}
-                    {ds.label}{" "}
-                  </>
-                ))}
-                <br />С начала наблюдений{" "}
-                <strong>
-                  {finalObject[caseType].institutions[inst].chartData.datasets?.reduce(
-                    (acc, curr) =>
-                      acc +
-                      curr.data?.reduce(
-                        (dataSum, currentData) => dataSum + currentData,
-                        0
-                      ),
-                    0
-                  )}
-                </strong>
-                из них
-                {finalObject[caseType].institutions[inst].chartData.datasets.map((ds) => (
-                  <>
-                    <strong class={decisionMarkerClass[ds.label]}>
-                      {ds.data?.reduce(
-                        (dataSum, currentData) => dataSum + currentData,
-                        0
-                      )}
-                    </strong>{" "}
-                    {ds.label}{" "}
-                  </>
-                ))}
-                <button
-                  class="btn btn-primary"
-                  type="button"
-                  data-bs-toggle="collapse"
-                  data-bs-target={`#${caseType
-                    .replaceAll(" ", "-")
-                    .replaceAll(".", "")}-${inst
-                    .replaceAll(" ", "-")
-                    .replaceAll(".", "")}-chart-container`}
-                >
-                  Chart
-                </button>
-                <div
-                  id={`${caseType
-                    .replaceAll(" ", "-")
-                    .replaceAll(".", "")}-${inst
-                    .replaceAll(" ", "-")
-                    .replaceAll(".", "")}-chart-container`}
-                  class="collapse"
-                >
-                  <canvas
-                    id={`${caseType
-                      .replaceAll(" ", "-")
-                      .replaceAll(".", "")}-${inst
-                      .replaceAll(" ", "-")
-                      .replaceAll(".", "")}-chart`}
-                    width="700"
-                    height="400"
-                  />
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
+        <CaseTypeYearCard
+          caseType={caseType}
+          caseTypeObject={finalObject[caseType]}
+        />
       ))
     }
   </div>
 </div>
-
-<script
-  is:inline="true"
-  src="https://cdn.jsdelivr.net/npm/chart.js@4/dist/chart.umd.js"
-></script>
-<script
-  is:inline="true"
-  src="https://cdn.jsdelivr.net/npm/moment@2/moment.min.js"
-></script>
-<script
-  is:inline="true"
-  src="https://cdn.jsdelivr.net/npm/chartjs-adapter-moment@1/dist/chartjs-adapter-moment.min.js"
-></script>
-
-<script define:vars={{ finalObject }}>
-  let originalCanvasWidth = Math.min(window.outerWidth, 700);
-  let canvasWidth = originalCanvasWidth;
-  const staticCanvases = document.getElementsByTagName("canvas");
-  for (const c of staticCanvases) {
-    const style = window.getComputedStyle(c.parentElement);
-    canvasWidth =
-      originalCanvasWidth -
-      parseInt(style.getPropertyValue("padding-left"), 10) -
-      parseInt(style.getPropertyValue("padding-right"), 10);
-    c.width = canvasWidth;
-  }
-  Object.keys(finalObject).forEach((caseType) => {
-    let ctx = document.getElementById(
-      `${caseType.replaceAll(" ", "-").replaceAll(".", "")}-chart`
-    );
-    new Chart(ctx, {
-      type: "line",
-      data: finalObject[caseType].chartData,
-      options: {
-        responsive: true,
-        plugins: {
-          legend: {
-            position: "top",
-          },
-        },
-        scales: {
-          x: {
-            type: "time",
-          },
-        },
-      },
-    });
-
-    Object.keys(finalObject[caseType].institutions).forEach((inst) => {
-      let ictx = document.getElementById(
-        `${caseType.replaceAll(" ", "-").replaceAll(".", "")}-${inst
-          .replaceAll(" ", "-")
-          .replaceAll(".", "")}-chart`
-      );
-      new Chart(ictx, {
-        type: "line",
-        data: finalObject[caseType].institutions[inst].chartData,
-        options: {
-          responsive: true,
-          plugins: {
-            legend: {
-              position: "top",
-            },
-          },
-          scales: {
-            x: {
-              type: "time",
-            },
-          },
-        },
-      });
-    });
-  });
-</script>

@@ -1,0 +1,66 @@
+---
+import type { ChartDataSetsDto } from "../utils/types";
+
+type Props = {
+  datasets: ChartDataSetsDto[];
+};
+
+const { datasets } = Astro.props;
+// text-dark-emphasis - for not used values
+const decisionMarkerClass: Record<string, string> = {
+  Inna: "text-dark-emphasis",
+  "Procedury priorytetowe lub przyspieszone": "text-dark-emphasis",
+  "Inna - pozytywna": "text-dark-emphasis",
+  Pozytywna: "text-success",
+  "Zgoda na pobyt tolerowany": "text-dark-emphasis",
+  Negatywna: "text-danger",
+  Wstrzymanie: "text-dark-emphasis",
+  Umorzenie: "text-info",
+  Wznowienie: "text-dark-emphasis",
+  "Wnioski bezpodstawne": "text-dark-emphasis",
+  "Ochrona uzupełniająca": "text-warning",
+  "Wnioski niedopuszczalne": "text-dark-emphasis",
+  "Zgoda na pobyt ze względów humanitarnych": "text-dark-emphasis",
+  "Pozostawienie bez rozpoznania": "text-dark-emphasis",
+};
+---
+
+<>
+  Новых решений{" "}
+  <strong>
+    {datasets.reduce((acc, curr) => acc + curr.data[curr.data.length - 1], 0)}
+  </strong>
+  из них
+  {
+    datasets.map((ds) => (
+      <>
+        <strong class={decisionMarkerClass[ds.label]}>
+          {ds.data?.slice(-1)}
+        </strong>{" "}
+        {ds.label}{" "}
+      </>
+    ))
+  }
+  <br />С начала наблюдений{" "}
+  <strong>
+    {
+      datasets.reduce(
+        (acc, curr) =>
+          acc +
+          curr.data?.reduce((dataSum, currentData) => dataSum + currentData, 0),
+        0
+      )
+    }
+  </strong>
+  из них
+  {
+    datasets.map((ds) => (
+      <>
+        <strong class={decisionMarkerClass[ds.label]}>
+          {ds.data?.reduce((dataSum, currentData) => dataSum + currentData, 0)}
+        </strong>{" "}
+        {ds.label}{" "}
+      </>
+    ))
+  }
+</>
