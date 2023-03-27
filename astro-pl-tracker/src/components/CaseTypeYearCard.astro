@@ -1,0 +1,116 @@
+---
+import type { CaseTypeChartType } from "../utils/types";
+import ChartCanvas from "./ChartCanvas.astro";
+import ChartInfoCard from "./ChartInfoCard.astro";
+
+type Props = {
+  caseType: string;
+  caseTypeObject: CaseTypeChartType;
+};
+const { caseType, caseTypeObject } = Astro.props;
+---
+
+<div class="p-2" style="width: 95vw; max-width: 700px;">
+  <h3 class="text-center">{caseType}</h3>
+  <ChartInfoCard datasets={caseTypeObject.chartData.datasets} />
+  <ChartCanvas
+    chartId={`${caseType.replaceAll(" ", "-").replaceAll(".", "")}-chart`}
+  />
+  <button
+    class="btn btn-primary"
+    type="button"
+    data-bs-toggle="collapse"
+    data-bs-target={`#${caseType
+      .replaceAll(" ", "-")
+      .replaceAll(".", "")}-institutions`}
+  >
+    Institutions
+  </button>
+  <div
+    class="p-2 collapse"
+    id={`${caseType.replaceAll(" ", "-").replaceAll(".", "")}-institutions`}
+  >
+    {
+      Object.keys(caseTypeObject.institutions).map((inst) => (
+        <div class="p-2">
+          <h4>{inst}</h4>
+          <ChartInfoCard datasets={caseTypeObject.institutions[inst].chartData.datasets} />
+          <button
+            class="btn btn-primary"
+            type="button"
+            data-bs-toggle="collapse"
+            data-bs-target={`#${caseType
+              .replaceAll(" ", "-")
+              .replaceAll(".", "")}-${inst
+              .replaceAll(" ", "-")
+              .replaceAll(".", "")}-chart-container`}
+          >
+            Chart
+          </button>
+          <div
+            id={`${caseType.replaceAll(" ", "-").replaceAll(".", "")}-${inst
+              .replaceAll(" ", "-")
+              .replaceAll(".", "")}-chart-container`}
+            class="collapse"
+          >
+            <ChartCanvas
+              chartId={`${caseType
+                .replaceAll(" ", "-")
+                .replaceAll(".", "")}-${inst
+                .replaceAll(" ", "-")
+                .replaceAll(".", "")}-chart`}
+            />
+          </div>
+        </div>
+      ))
+    }
+  </div>
+</div>
+
+<script define:vars={{ caseType, caseTypeObject }}>
+  let ctx = document.getElementById(
+    `${caseType.replaceAll(" ", "-").replaceAll(".", "")}-chart`
+  );
+  new Chart(ctx, {
+    type: "line",
+    data: caseTypeObject.chartData,
+    options: {
+      responsive: true,
+      plugins: {
+        legend: {
+          position: "top",
+        },
+      },
+      scales: {
+        x: {
+          type: "time",
+        },
+      },
+    },
+  });
+
+  Object.keys(caseTypeObject.institutions).forEach((inst) => {
+    let ictx = document.getElementById(
+      `${caseType.replaceAll(" ", "-").replaceAll(".", "")}-${inst
+        .replaceAll(" ", "-")
+        .replaceAll(".", "")}-chart`
+    );
+    new Chart(ictx, {
+      type: "line",
+      data: caseTypeObject.institutions[inst].chartData,
+      options: {
+        responsive: true,
+        plugins: {
+          legend: {
+            position: "top",
+          },
+        },
+        scales: {
+          x: {
+            type: "time",
+          },
+        },
+      },
+    });
+  });
+</script>

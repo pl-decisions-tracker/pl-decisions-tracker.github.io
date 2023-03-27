@@ -1,0 +1,70 @@
+---
+import prisma from "../utils/prisma";
+
+type Props = {
+  countryParam: string;
+  year: number;
+};
+
+const { year, countryParam } = Astro.props;
+const years = await prisma.decisions
+  .findMany({
+    include: {
+      countryObj: true,
+      updateObj: true,
+    },
+    where: {
+      AND: [
+        {
+          countryObj: {
+            code: countryParam.toUpperCase(),
+          },
+        },
+        {
+          OR: [
+            {
+              updateObj: {
+                dataUpdated: {
+                  equals: 1,
+                },
+              },
+            },
+            {
+              updateObj: {
+                dataUpdated: {
+                  equals: 2,
+                },
+              },
+            },
+          ],
+        },
+      ],
+    },
+  })
+  .then((res) =>
+    Array.from(
+      new Set(res.map((d) => d.updateObj.timestamp.getUTCFullYear()))
+    ).sort()
+  );
+---
+
+<div class="d-flex justify-content-center flex-wrap">
+  {
+    Array.isArray(years) && years.length > 0 ? (
+      years.map((y, idx) => (
+        <>
+          <div class="mx-0 p-2">
+            {y === year ? (
+              <strong>{y.toString()}</strong>
+            ) : (
+              <a href={`./${y.toString()}.html`}>{y.toString()}</a>
+            )}
+          </div>
+          {idx < years.length - 1 ? <div class="mx-0 p-2"> | </div> : ""}
+        </>
+      ))
+    ) : (
+      <h5>Для данной страны решений за время наблюдений не выносилось</h5>
+    )
+  }
+</div>
