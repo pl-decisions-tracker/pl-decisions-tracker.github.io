@@ -10,16 +10,17 @@ const { year, countryParam } = Astro.props;
 const years = await prisma.decisions
   .findMany({
     include: {
-      countryObj: true,
       updateObj: true,
     },
     where: {
       AND: [
-        {
-          countryObj: {
-            code: countryParam.toUpperCase(),
-          },
-        },
+        countryParam.toUpperCase() === "ALL"
+          ? {}
+          : {
+              countryObj: {
+                code: countryParam.toUpperCase(),
+              },
+            },
         {
           OR: [
             {

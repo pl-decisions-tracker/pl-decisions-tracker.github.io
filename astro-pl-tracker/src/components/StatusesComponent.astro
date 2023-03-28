@@ -1,5 +1,5 @@
 ---
-import prisma from '../utils/prisma';
+import prisma from "../utils/prisma";
 import MainLayout from "../layouts/MainLayout.astro";
 import { formatDate } from "../utils/datatools";
 import { getLongestHalfSize } from "../utils/texttools";
@@ -18,11 +18,14 @@ const statuses = await prisma.statuses.findMany({
     institutionObj: true,
     updateObj: true,
   },
-  where: {
-    countryObj: {
-      code: countryParam.toUpperCase(),
-    },
-  },
+  where:
+    countryParam.toUpperCase() === "ALL"
+      ? {}
+      : {
+          countryObj: {
+            code: countryParam.toUpperCase(),
+          },
+        },
   orderBy: [
     {
       updateObj: {

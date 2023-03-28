@@ -1,5 +1,5 @@
 ---
-import prisma from '../utils/prisma';
+import prisma from "../utils/prisma";
 import { formatDate } from "../utils/datatools";
 import { getLongestHalfSize } from "../utils/texttools";
 import FlexTable from "../components/FlexTable.astro";
@@ -16,11 +16,14 @@ const statusesTotal = await prisma.statuses.findMany({
     statusObj: true,
     updateObj: true,
   },
-  where: {
-    countryObj: {
-      code: countryParam.toUpperCase(),
-    },
-  },
+  where:
+    countryParam.toUpperCase() === "ALL"
+      ? {}
+      : {
+          countryObj: {
+            code: countryParam.toUpperCase(),
+          },
+        },
   orderBy: [
     {
       updateObj: {
