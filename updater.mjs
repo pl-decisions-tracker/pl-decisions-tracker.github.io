@@ -87,6 +87,7 @@ const ensureUpdateTypesTable = (db) => {
               } else {
                 db.run(
                   `INSERT INTO updateTypes (updateTypeId, updateTypeName) VALUES
+                (-1, "MGP unavailable"),
                 (0, "No data"),
                 (1, "Regular update"),
                 (2, "Initial upadte"),
@@ -197,7 +198,32 @@ const sqlLiteConnection = new sqlite3.Database("astro-pl-tracker/prisma/tracker.
 await setupTrackerDatabase(sqlLiteConnection);
 $.env.NODE_TLS_REJECT_UNAUTHORIZED = 0;
 const updatesUrl = `https://migracje.gov.pl/wp-json/udscmap/v1/decisions/poland?groupBy=&fields=total&orderBy=${randomSuffix}&year=${currentYear}`;
-const updatesData = await fetch(updatesUrl).then((res) => res.json());
+let updatesData;
+try {
+  updatesData = await fetch(updatesUrl).then((res) => res.json());
+} catch (error) {
+  console.log(`Failed to get data from MGP site: ${error}`)
+  console.log(`Result code is: ${updatesData?.code}, data: ${updatesData?.data}, message: ${updatesData?.message}`);
+  echo("There were error checking MGP site, exiting.");
+  process.exit(1);
+}
+
+if(updatesData?.code >= 500){
+  console.log(`Result code is: ${updatesData?.code}, data: ${updatesData?.data}, message: ${updatesData?.message}`);
+  let query = `INSERT INTO updates (decisionsTotal, timestamp, dataUpdated) VALUES (0, ${currentTimestamp}, -1)`;
+  dateId = await new Promise((resolve, reject) => {
+    sqlLiteConnection.run(query, function (err) {
+      if (err) {
+        reject(err);
+      } else {
+        resolve(this.lastID);
+      }
+    });
+  });
+  echo("There were error checking MGP site, exiting.");
+  process.exit(0);
+}
+
 let dateId;
 if (Array.isArray(updatesData[0]) && updatesData[0].length == 0) {
   // dataUpdated is 0 by default
