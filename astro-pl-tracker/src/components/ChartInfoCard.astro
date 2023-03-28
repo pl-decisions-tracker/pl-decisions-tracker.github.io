@@ -28,7 +28,7 @@ const decisionMarkerClass: Record<string, string> = {
 <>
   Новых решений{" "}
   <strong>
-    {datasets.reduce((acc, curr) => acc + curr.data[curr.data.length - 1], 0)}
+    {datasets.reduce((acc, curr) => acc + (isNaN(curr.data[curr.data.length - 1]) ? 0 : curr.data[curr.data.length - 1]), 0)}
   </strong>
   из них
   {
@@ -47,7 +47,7 @@ const decisionMarkerClass: Record<string, string> = {
       datasets.reduce(
         (acc, curr) =>
           acc +
-          curr.data?.reduce((dataSum, currentData) => dataSum + currentData, 0),
+          curr.data.reduce((dataSum, currentData) => dataSum + (isNaN(currentData) ? 0 : currentData), 0),
         0
       )
     }
@@ -57,7 +57,7 @@ const decisionMarkerClass: Record<string, string> = {
     datasets.map((ds) => (
       <>
         <strong class={decisionMarkerClass[ds.label]}>
-          {ds.data?.reduce((dataSum, currentData) => dataSum + currentData, 0)}
+          {ds.data.reduce((dataSum, currentData) => dataSum + (isNaN(currentData) ? 0 : currentData), 0)}
         </strong>{" "}
         {ds.label}{" "}
       </>

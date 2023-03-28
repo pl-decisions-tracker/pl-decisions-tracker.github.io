@@ -95,7 +95,7 @@ function throwExpression(errorMessage: string): never {
 
 let helper: helperType = {};
 let isCleanStart = false;
-const finalObject = data?.reduce((acc, curr) => {
+const finalObject = data.reduce((acc, curr) => {
   const currentCaseType = curr.caseTypeObj.type;
   const currentDecisionMarker = curr.decisionMarkerObj.description;
   const currentInstitution = curr.institutionObj.name;
@@ -227,20 +227,22 @@ const finalObject = data?.reduce((acc, curr) => {
         );
       }
       const dataAlignedIndex = isCleanStart ? dataIndex : dataIndex - 1;
+      const prevSum =
+        helper[currentCaseType].totals[currentDecisionMarker].total[
+          dataIndex - 1
+        ];
+      const prevInstSum =
+        helper[currentCaseType].institutions[currentInstitution][
+          currentDecisionMarker
+        ].total[dataIndex - 1];
       if (!isNaN(currentDataset.data[dataAlignedIndex])) {
         currentDataset.data[dataAlignedIndex] += curr.count;
       } else {
         currentDataset.data[dataAlignedIndex] =
-          curr.count -
-          helper[currentCaseType].totals[currentDecisionMarker].total[
-            dataIndex - 1
-          ];
+          curr.count - (isNaN(prevSum) ? 0 : prevSum);
       }
       currentInstDataset.data[dataAlignedIndex] =
-        curr.count -
-        helper[currentCaseType].institutions[currentInstitution][
-          currentDecisionMarker
-        ].total[dataIndex - 1];
+        curr.count - (isNaN(prevInstSum) ? 0 : prevInstSum);
     }
   }
   return acc;
