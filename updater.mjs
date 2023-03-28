@@ -211,7 +211,7 @@ try {
 if(updatesData?.code >= 500){
   console.log(`Result code is: ${updatesData?.code}, data: ${updatesData?.data}, message: ${updatesData?.message}`);
   let query = `INSERT INTO updates (decisionsTotal, timestamp, dataUpdated) VALUES (0, ${currentTimestamp}, -1)`;
-  dateId = await new Promise((resolve, reject) => {
+  await new Promise((resolve, reject) => {
     sqlLiteConnection.run(query, function (err) {
       if (err) {
         reject(err);
@@ -221,7 +221,7 @@ if(updatesData?.code >= 500){
     });
   });
   echo("There were error checking MGP site, exiting.");
-  process.exit(0);
+  process.exit(1);
 }
 
 let dateId;
