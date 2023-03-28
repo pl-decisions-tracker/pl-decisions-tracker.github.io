@@ -21,9 +21,12 @@ const data = await prisma.decisions.findMany({
         gt: 0,
       },
     },
-    countryObj: {
-      code: countryParam.toUpperCase(),
-    },
+    countryObj:
+      countryParam.toUpperCase() === "ALL"
+        ? {}
+        : {
+            code: countryParam.toUpperCase(),
+          },
   },
   include: {
     updateObj: true,

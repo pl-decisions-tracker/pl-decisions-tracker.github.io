@@ -1,5 +1,10 @@
 export const countries = [
   {
+    code: "all",
+    path: "/all",
+    countryPath: true,
+  },
+  {
     code: "by",
     path: "/by",
     countryPath: true,

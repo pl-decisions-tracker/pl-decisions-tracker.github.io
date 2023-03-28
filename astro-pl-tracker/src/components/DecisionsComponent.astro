@@ -1,5 +1,5 @@
 ---
-import prisma from '../utils/prisma';
+import prisma from "../utils/prisma";
 import FlexTable from "../components/FlexTable.astro";
 import type { FinalObjectType } from "../utils/types";
 import { getLongestHalfSize } from "../utils/texttools";
@@ -18,11 +18,14 @@ const decisions = await prisma.decisions.findMany({
     institutionObj: true,
     updateObj: true,
   },
-  where: {
-    countryObj: {
-      code: countryParam.toUpperCase(),
-    },
-  },
+  where:
+    countryParam.toUpperCase() === "ALL"
+      ? {}
+      : {
+          countryObj: {
+            code: countryParam.toUpperCase(),
+          },
+        },
   orderBy: [
     {
       updateObj: {
@@ -84,7 +87,7 @@ let initialState = {
       date: { type: "search" },
       institution: { type: "drop" },
       caseType: { type: "drop" },
-      decision: { type : "drop" },
+      decision: { type: "drop" },
     },
     fieldOrder: ["date", "institution", "caseType", "decision"],
   },
@@ -108,5 +111,5 @@ Object.keys(initialState.metadata.fields).forEach((f) => {
     >Количество заявлений поданных на определённю дату. Данное количество
     считается от начала года и сбрасывается 1 января
   </strong>
-  <FlexTable  rawData={decisions} initialState={initialState} />
+  <FlexTable rawData={decisions} initialState={initialState} />
 </>

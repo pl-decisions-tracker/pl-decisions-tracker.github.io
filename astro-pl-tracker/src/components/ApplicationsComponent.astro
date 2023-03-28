@@ -1,5 +1,5 @@
 ---
-import prisma from '../utils/prisma';
+import prisma from "../utils/prisma";
 import MainLayout from "../layouts/MainLayout.astro";
 import FlexTable from "../components/FlexTable.astro";
 import type { FinalObjectType } from "../utils/types";
@@ -18,11 +18,14 @@ const applications = await prisma.applications.findMany({
     institutionObj: true,
     updateObj: true,
   },
-  where: {
-    countryObj: {
-      code: countryParam.toUpperCase(),
-    },
-  },
+  where:
+    countryParam.toUpperCase() === "ALL"
+      ? {}
+      : {
+          countryObj: {
+            code: countryParam.toUpperCase(),
+          },
+        },
   orderBy: [
     {
       updateObj: {
@@ -90,7 +93,6 @@ Object.keys(initialState.metadata.fields).forEach((f) => {
     initialState.metadata.fields[f].valueMaxWidth = valueTitleEmSize;
   }
 });
-
 ---
 
 <>
