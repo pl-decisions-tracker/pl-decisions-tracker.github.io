@@ -194,7 +194,9 @@ const currentYear = parseInt($.env.YEAR) || currentDate.getUTCFullYear();
 const currentTimestamp = $.env.YEAR
   ? Date.UTC(parseInt($.env.YEAR), 11, 31, 23, 59, 0)
   : currentDate.valueOf();
-const sqlLiteConnection = new sqlite3.Database("astro-pl-tracker/prisma/tracker.db");
+const sqlLiteConnection = new sqlite3.Database(
+  "astro-pl-tracker/prisma/tracker.db"
+);
 await setupTrackerDatabase(sqlLiteConnection);
 $.env.NODE_TLS_REJECT_UNAUTHORIZED = 0;
 const updatesUrl = `https://migracje.gov.pl/wp-json/udscmap/v1/decisions/poland?groupBy=&fields=total&orderBy=${randomSuffix}&year=${currentYear}`;
@@ -202,14 +204,18 @@ let updatesData;
 try {
   updatesData = await fetch(updatesUrl).then((res) => res.json());
 } catch (error) {
-  console.log(`Failed to get data from MGP site: ${error}`)
-  console.log(`Result code is: ${updatesData?.code}, data: ${updatesData?.data}, message: ${updatesData?.message}`);
+  console.log(`Failed to get data from MGP site: ${error}`);
+  console.log(
+    `Result code is: ${updatesData?.code}, data: ${updatesData?.data}, message: ${updatesData?.message}`
+  );
   echo("There were error checking MGP site, exiting.");
   process.exit(1);
 }
 
-if(updatesData?.code >= 500){
-  console.log(`Result code is: ${updatesData?.code}, data: ${updatesData?.data}, message: ${updatesData?.message}`);
+if (updatesData?.code >= 500) {
+  console.log(
+    `Result code is: ${updatesData?.code}, data: ${updatesData?.data}, message: ${updatesData?.message}`
+  );
   let query = `INSERT INTO updates (decisionsTotal, timestamp, dataUpdated) VALUES (0, ${currentTimestamp}, -1)`;
   await new Promise((resolve, reject) => {
     sqlLiteConnection.run(query, function (err) {
@@ -221,7 +227,12 @@ if(updatesData?.code >= 500){
     });
   });
   echo("There were error checking MGP site, exiting.");
-  process.exit(1);
+  const output = process.env["GITHUB_OUTPUT"];
+  fs.appendFileSync(output, `update_failed=1${os.EOL}`);
+  fs.appendFileSync(output, `failure_code=${updatesData.code}}${os.EOL}`);
+  fs.appendFileSync(output, `failure_message=${updatesData.message.replaceAll("\n", "")}}${os.EOL}`);
+  fs.appendFileSync(output, `failure_data=${updatesData.data.replaceAll("\n", "")}}${os.EOL}`);
+  process.exit(0);
 }
 
 let dateId;
