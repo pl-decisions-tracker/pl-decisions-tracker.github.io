@@ -46,6 +46,11 @@ jobs:
 
   sqlite-update:
     runs-on: ubuntu-latest
+    outputs:
+      update_failed: ${{ steps.updater.outputs.update_failed }}
+      failure_code: ${{ steps.updater.outputs.failure_code }}
+      failure_message: ${{ steps.updater.outputs.failure_message }}
+      failure_data: ${{ steps.updater.outputs.failure_data }}
     steps:
     - uses: actions/checkout@v3
 
@@ -79,6 +84,7 @@ jobs:
       run: pnpm install
 
     - name: Run sql updater
+      id: updater
       run: pnpm exec zx updater.mjs
 
     - name: Commit and push changes
@@ -116,3 +122,17 @@ jobs:
       - name: Deploy to GitHub Pages
         id: deployment
         uses: actions/deploy-pages@v1
+      - name: Check updater status
+        env:
+          UPDATE_FAILED: ${{needs.sqlite-update.outputs.update_failed}}
+          FAILURE_CODE: ${{needs.sqlite-update.outputs.failure_code}}
+          FAILURE_MESSAGE: ${{needs.sqlite-update.outputs.failure_message}}
+          FAILURE_DATA: ${{needs.sqlite-update.outputs.failure_data}}
+        run : |-
+          if [ "$UPDATE_FAILED" = "1" ]; then
+            echo "Update failed, failing the whole pipeline";
+            echo "Failre code: ${FAILURE_CODE}";
+            echo "Failre message: ${FAILURE_MESSAGE}";
+            echo "Failre data: ${FAILURE_DATA}";
+            exit 1;
+          fi
