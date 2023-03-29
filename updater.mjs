@@ -252,7 +252,7 @@ if (Array.isArray(updatesData[0]) && updatesData[0].length == 0) {
   process.exit(0);
 }
 
-let query = `SELECT * FROM updates WHERE timestamp/1000 < ${currentTimestamp} AND strftime('%Y', timestamp/1000, 'unixepoch') = '${currentYear}' ORDER BY dateId DESC, timestamp DESC LIMIT 1`;
+let query = `SELECT * FROM updates WHERE timestamp/1000 < ${currentTimestamp} AND strftime('%Y', timestamp/1000, 'unixepoch') = '${currentYear}' AND dataUpdated >= 0 ORDER BY dateId DESC, timestamp DESC LIMIT 1`;
 const previousUpdate = await new Promise((resolve, reject) => {
   sqlLiteConnection.all(query, (err, rows) => {
     if (err) {
@@ -291,7 +291,7 @@ let updateType;
 if ($.env.YEAR) {
   updateType = 4;
 } else {
-  query = `SELECT SUM(DISTINCT dataUpdated) as updateMask FROM updates WHERE strftime('%Y', timestamp/1000, 'unixepoch') = '${currentYear}';`;
+  query = `SELECT SUM(DISTINCT dataUpdated) as updateMask FROM updates WHERE strftime('%Y', timestamp/1000, 'unixepoch') = '${currentYear}' AND dataUpdated >= 0;`;
   const yearUpdateMask = await new Promise((resolve, reject) => {
     sqlLiteConnection.all(query, (err, rows) => {
       if (err) {
