@@ -229,9 +229,9 @@ if (updatesData?.code >= 500) {
   echo("There were error checking MGP site, exiting.");
   const output = process.env["GITHUB_OUTPUT"];
   fs.appendFileSync(output, `update_failed=1${os.EOL}`);
-  fs.appendFileSync(output, `failure_code=${updatesData.code}}${os.EOL}`);
-  fs.appendFileSync(output, `failure_message=${updatesData.message?.replaceAll("\n", "")}}${os.EOL}`);
-  fs.appendFileSync(output, `failure_data=${updatesData.data?.replaceAll("\n", "")}}${os.EOL}`);
+  fs.appendFileSync(output, `failure_code=${updatesData.code}${os.EOL}`);
+  fs.appendFileSync(output, `failure_message=${updatesData.message?.replaceAll("\n", "")}${os.EOL}`);
+  fs.appendFileSync(output, `failure_data=${updatesData.data?.replaceAll("\n", "")}${os.EOL}`);
   process.exit(0);
 }
 
