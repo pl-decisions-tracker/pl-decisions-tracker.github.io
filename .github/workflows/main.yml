@@ -44,7 +44,7 @@ jobs:
   #       git push
 
 
-  sqlite-update:
+  sqliteupdate:
     runs-on: ubuntu-latest
     outputs:
       update_failed: ${{ steps.updater.outputs.update_failed }}
@@ -98,7 +98,7 @@ jobs:
         git push
 
   build:
-    needs: sqlite-update
+    needs: sqliteupdate
     env:
       DATABASE_URL: "file:./tracker.db"
     runs-on: ubuntu-latest
@@ -113,7 +113,9 @@ jobs:
             package-manager: pnpm # The Node package manager that should be used to install dependencies and build your site. Automatically detected based on your lockfile. (optional)
 
   deploy:
-    needs: build
+    needs:
+      - build
+      - sqliteupdate
     runs-on: ubuntu-latest
     environment:
       name: github-pages
@@ -124,10 +126,10 @@ jobs:
         uses: actions/deploy-pages@v1
       - name: Check updater status
         env:
-          UPDATE_FAILED: ${{needs.sqlite-update.outputs.update_failed}}
-          FAILURE_CODE: ${{needs.sqlite-update.outputs.failure_code}}
-          FAILURE_MESSAGE: ${{needs.sqlite-update.outputs.failure_message}}
-          FAILURE_DATA: ${{needs.sqlite-update.outputs.failure_data}}
+          UPDATE_FAILED: ${{needs.sqliteupdate.outputs.update_failed}}
+          FAILURE_CODE: ${{needs.sqliteupdate.outputs.failure_code}}
+          FAILURE_MESSAGE: ${{needs.sqliteupdate.outputs.failure_message}}
+          FAILURE_DATA: ${{needs.sqliteupdate.outputs.failure_data}}
         run : |-
           if [ "$UPDATE_FAILED" = "1" ]; then
             echo "Update failed, failing the whole pipeline";
