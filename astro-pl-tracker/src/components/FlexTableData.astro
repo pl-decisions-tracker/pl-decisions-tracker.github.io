@@ -19,6 +19,7 @@ const {finalObject} = Astro.props
               `${finalObject.data[rec].field}Filter`,
               "filter-container",
             ]}
+            data-filter={rec}
           >
             <div class:list={[
               "border",

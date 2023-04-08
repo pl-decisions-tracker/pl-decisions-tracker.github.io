@@ -2,7 +2,12 @@
 import DropFilter from "./DropFilter.astro";
 import FlexTableData from "./FlexTableData.astro";
 import SearchFilter from "./SearchFilter.astro";
-import type { CurrentOjbectType, FinalDataType, FinalObjectType, RawDataType } from "../utils/types";
+import type {
+  CurrentOjbectType,
+  FinalDataType,
+  FinalObjectType,
+  RawDataType,
+} from "../utils/types";
 import { getTextDivEmSize } from "../utils/texttools";
 import { get } from "../utils/datatools";
 
@@ -13,60 +18,78 @@ type Props = {
 
 const { rawData, initialState } = Astro.props;
 
-const finalObject: FinalObjectType = rawData.reduce((acc: FinalObjectType, curr) => {
-  // Prepare DTO
-  const currObj = acc.metadata.fieldOrder.reduce((tempObj, f)=>{
-    const currentFieldRawValue = get(curr, acc.metadata.fields[f].resolver);
-    const currentFormatter = acc.metadata.fields[f].formatter;
-    const currentFieldValue = typeof currentFormatter === "function" ? currentFormatter!(currentFieldRawValue) : String.prototype.toString.call(currentFieldRawValue);
-    tempObj[f] = {
-      name: currentFieldValue,
-      total: 0,
-    }
-    return tempObj
-  },{} as CurrentOjbectType)
-  //Data
-  let currentFieldObject: FinalDataType = acc.data;
-  for(let fieldIndex = 0; fieldIndex < acc.metadata.fieldOrder.length; fieldIndex++){
-    const f = acc.metadata.fieldOrder[fieldIndex];
-    if(currentFieldObject === null || currentFieldObject === undefined){
-      throw new Error(`current field object for field ${f} cant be null or undefinde`)
-    }
-    if(!currentFieldObject.hasOwnProperty(currObj[f].name)){
-      currentFieldObject[currObj[f].name] = {
-        field: f,
-        total: curr.count,
-        count: 1,
-      }
-      if(fieldIndex < acc.metadata.fieldOrder.length-1){
-        currentFieldObject[currObj[f].name].children = {}
-      }
-    } else {
-      currentFieldObject[currObj[f].name].total += curr.count;
-      currentFieldObject[currObj[f].name].count++;
-    }
-    currObj[f].total = currentFieldObject[currObj[f].name].total;
-    currentFieldObject = currentFieldObject[currObj[f].name].children!;
-  }
-  // Metadata
-  Object.keys(acc.metadata.fields).forEach((f) => {
-    const emSize = getTextDivEmSize(currObj[f].name);
-    const totalEmSize = getTextDivEmSize(currObj[f].total.toString());
-    if (acc.metadata.fields[f].maxWidth < emSize) {
-      acc.metadata.fields[f].maxWidth = emSize;
-    }
-    if (acc.metadata.fields[f].valueMaxWidth < totalEmSize) {
-      acc.metadata.fields[f].valueMaxWidth = totalEmSize;
-    }
-    if (
-      acc.metadata?.filters?.[f].type === "drop" &&
-      !acc.metadata.fields[f].values.some((v) => v === currObj[f].name)
+const finalObject: FinalObjectType = rawData.reduce(
+  (acc: FinalObjectType, curr) => {
+    // Prepare DTO
+    const currObj = acc.metadata.fieldOrder.reduce((tempObj, f) => {
+      const currentFieldRawValue = get(curr, acc.metadata.fields[f].resolver);
+      const currentFormatter = acc.metadata.fields[f].formatter;
+      const currentFieldValue =
+        typeof currentFormatter === "function"
+          ? currentFormatter!(currentFieldRawValue)
+          : String.prototype.toString.call(currentFieldRawValue);
+      tempObj[f] = {
+        name: currentFieldValue,
+        total: 0,
+      };
+      return tempObj;
+    }, {} as CurrentOjbectType);
+    //Data
+    let currentFieldObject: FinalDataType = acc.data;
+    for (
+      let fieldIndex = 0;
+      fieldIndex < acc.metadata.fieldOrder.length;
+      fieldIndex++
     ) {
-      acc.metadata.fields[f].values.push(currObj[f].name);
+      const f = acc.metadata.fieldOrder[fieldIndex];
+      if (currentFieldObject === null || currentFieldObject === undefined) {
+        throw new Error(
+          `current field object for field ${f} cant be null or undefinde`
+        );
+      }
+      if (!currentFieldObject.hasOwnProperty(currObj[f].name)) {
+        currentFieldObject[currObj[f].name] = {
+          field: f,
+          total: curr.count,
+          count: 1,
+        };
+        if (fieldIndex < acc.metadata.fieldOrder.length - 1) {
+          currentFieldObject[currObj[f].name].children = {};
+        }
+      } else {
+        currentFieldObject[currObj[f].name].total += curr.count;
+        currentFieldObject[currObj[f].name].count++;
+      }
+      currObj[f].total = currentFieldObject[currObj[f].name].total;
+      currentFieldObject = currentFieldObject[currObj[f].name].children!;
     }
-  });
+    // Metadata
+    Object.keys(acc.metadata.fields).forEach((f) => {
+      const emSize = getTextDivEmSize(currObj[f].name);
+      const totalEmSize = getTextDivEmSize(currObj[f].total.toString());
+      if (acc.metadata.fields[f].maxWidth < emSize) {
+        acc.metadata.fields[f].maxWidth = emSize;
+      }
+      if (acc.metadata.fields[f].valueMaxWidth < totalEmSize) {
+        acc.metadata.fields[f].valueMaxWidth = totalEmSize;
+      }
+      if (
+        acc.metadata?.filters?.[f].type === "drop" &&
+        !acc.metadata.fields[f].values.some((v) => v === currObj[f].name)
+      ) {
+        acc.metadata.fields[f].values.push(currObj[f].name);
+      }
+    });
+    return acc;
+  },
+  initialState
+);
+const filters = finalObject.metadata.fieldOrder.reduce((acc, curr) => {
+  if (finalObject.metadata.filters.hasOwnProperty(curr)) {
+    acc.push({ name: curr, type: finalObject.metadata.filters[curr].type });
+  }
   return acc;
-}, initialState);
+}, []);
 ---
 
 <div
@@ -112,19 +135,11 @@ const finalObject: FinalObjectType = rawData.reduce((acc: FinalObjectType, curr)
           >
             {finalObject.metadata.filters.hasOwnProperty(f)
               ? {
-                  search: (
-                    <SearchFilter
-                      searchClass={`${f}Filter`}
-                      valueClass={`${f}Value`}
-                      gridId="gridData"
-                    />
-                  ),
+                  search: <SearchFilter searchClass={`${f}Filter`} />,
                   drop: (
                     <DropFilter
                       searchClass={`${f}Filter`}
-                      valueClass={`${f}Value`}
                       filterValues={finalObject.metadata.fields[f].values}
-                      gridId="gridData"
                     />
                   ),
                 }[finalObject.metadata.filters[f].type]
@@ -140,7 +155,7 @@ const finalObject: FinalObjectType = rawData.reduce((acc: FinalObjectType, curr)
             <div
               class="border p-2"
               style={`width: ${finalObject.metadata.fields[f].valueMaxWidth}em`}
-            ></div>
+            />
           ))
       }
     </div>
@@ -150,4 +165,172 @@ const finalObject: FinalObjectType = rawData.reduce((acc: FinalObjectType, curr)
   </div>
 </div>
 
-<style></style>
+<script is:inline="true" define:vars={{ filters }}>
+  function filterByCss() {
+    const filterSelector = [
+      ...document.querySelectorAll(".data-filter"),
+    ].reduce(
+      (acc, curr, idx, arr) => {
+        let newAcc = acc.filterString;
+        if (curr.dataset.filtervalue.length > 0) {
+          if (curr.dataset.filtertype === "search") {
+            newAcc = `${newAcc}${newAcc.length > 0 ? ", " : ""}[data-filter*="${
+              curr.dataset.filtervalue
+            }"]`;
+            acc.filters.push(`[data-filter*="${curr.dataset.filtervalue}"]`);
+          } else if (curr.dataset.filtertype === "drop") {
+            newAcc = `${newAcc}${newAcc.length > 0 ? ", " : ""}[data-filter="${
+              curr.dataset.filtervalue
+            }"]`;
+            acc.filters.push(`[data-filter="${curr.dataset.filtervalue}"]`);
+          } else {
+            throw new Error(
+              `Unknown value for data attribute filtervalue ${curr.dataset.filtertype} in element #${curr.id}`
+            );
+          }
+        } else if (idx < arr.length - 1 && arr[idx + 1].dataset.filtervalue) {
+          newAcc = `${newAcc}${newAcc.length > 0 ? ", " : ""}${acc.filters.join(
+            " "
+          )} .filter-container:has(${arr
+            .slice(idx + 1)
+            .map((nextEl) => {
+              if (nextEl.dataset.filtervalue.length > 0) {
+                if (nextEl.dataset.filtertype === "search") {
+                  return `[data-filter*="${nextEl.dataset.filtervalue}"]`;
+                } else if (nextEl.dataset.filtertype === "drop") {
+                  return `[data-filter="${nextEl.dataset.filtervalue}"]`;
+                } else {
+                  throw new Error(
+                    `Unknown value for data attribute filtervalue ${nextEl.dataset.filtertype} in element #${nextEl.id}`
+                  );
+                }
+              } else {
+                return "";
+              }
+            })
+            .join(" ")})`;
+        }
+        return { filterString: newAcc, filters: acc.filters };
+      },
+      { filterString: "", filters: [] }
+    );
+
+    const filterStyle =
+      document.getElementById("filterStyle") ??
+      document.head.appendChild(document.createElement("style"));
+    filterStyle.id = "filterStyle";
+    filterStyle.innerText = `div.filter-container:not(${
+      filterSelector.filterString
+    }, ${filterSelector.filters.join(
+      " "
+    )} .filter-container){display: none !important;}`;
+  }
+
+  function filterByJs(
+    searchClass,
+    filterId,
+    gridId,
+    valueClass,
+    filterValue,
+    filterType
+  ) {
+    const clonedGrid = document.getElementById(gridId).cloneNode(true);
+    const valueElements = clonedGrid.getElementsByClassName(searchClass);
+    if (valueElements.length === 0) {
+      throw new Error(`HTML Elements with class '${valueClass}' not found`);
+    }
+    for (let index = 0; index < valueElements.length; index++) {
+      const currentElement = valueElements.item(index);
+      const currentValueEl = currentElement.getElementsByClassName(valueClass);
+      if (currentValueEl.length !== 1) {
+        throw new Error(
+          `There should be only 1 div with class valueClass inside each ${filterId} element, but found ${currentValueEl.length}`
+        );
+      }
+      if (
+        (filterType === "search" &&
+          currentValueEl.item(0).innerText.includes(filterValue)) ||
+        (filterType === "drop" &&
+          (currentValueEl.item(0).innerText.trim() === filterValue ||
+          filterValue === ""))
+      ) {
+        currentElement.classList.remove("d-none");
+        currentElement.classList.remove("filtered");
+        currentElement.classList.add("d-flex");
+      } else {
+        currentElement.classList.remove("d-flex");
+        currentElement.classList.add("filtered");
+        currentElement.classList.add("d-none");
+      }
+    }
+
+    for (let index = 10; index >=0 ; index--) {
+      const nestedFilterNodes = document.evaluate(
+        `//div[contains(@class,'filter-container') and count(ancestor::div[contains(@class,'filter-container')]) = ${index} and ./div/div[contains(@class,'filter-container')]]`,
+        clonedGrid,
+        null,
+        XPathResult.UNORDERED_NODE_SNAPSHOT_TYPE,
+        null
+      );
+      for(let sIndex = 0; sIndex < nestedFilterNodes.snapshotLength; sIndex++){
+        let currentFilterNode = nestedFilterNodes.snapshotItem(sIndex);
+        const visibleNodeCount = document.evaluate(
+          "count(./div/div[contains(@class,'d-flex') and contains(@class,'filter-container')])",
+          currentFilterNode,
+          null,
+          XPathResult.NUMBER_TYPE,
+          null
+        );
+        if(visibleNodeCount.numberValue === 0){
+          currentFilterNode.classList.remove('d-flex');
+          currentFilterNode.classList.add('d-none');
+        } else {
+          if(!currentFilterNode.classList.contains("filtered")){
+            currentFilterNode.classList.remove('d-none');
+            currentFilterNode.classList.add('d-flex');
+          }
+        }
+      }
+    }
+
+    document
+      .getElementById(gridId)
+      .parentNode.replaceChild(clonedGrid, document.getElementById(gridId));
+  }
+
+  var searchtimer;
+  for (let findex = 0; findex < filters.length; findex++) {
+    const element = filters[findex];
+    window.addEventListener("DOMContentLoaded", () => {
+      document
+        .querySelector(`#${element.name}Filter`)
+        .addEventListener("input", (e) => {
+          document.querySelector(`#${element.name}Filter`).dataset[
+            "filtervalue"
+          ] = e.target.value;
+          const filterData = () => {
+            if (CSS.supports("selector(:has(a, b))")) {
+              filterByCss();
+            } else {
+              filterByJs(
+                `${element.name}Filter`,
+                `#${element.name}Filter`,
+                "gridData",
+                `${element.name}Value`,
+                e.target.value,
+                element.type
+              );
+            }
+          };
+          if (element.type === "search") {
+            clearTimeout(searchtimer);
+            searchtimer = setTimeout(() => {
+              filterData();
+            }, 1000);
+          } else if (element.type === "drop") {
+            filterData();
+          }
+        });
+    });
+  }
+</script>
