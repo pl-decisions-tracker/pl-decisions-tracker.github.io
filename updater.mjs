@@ -203,6 +203,7 @@ const updatesUrl = `https://migracje.gov.pl/wp-json/udscmap/v1/decisions/poland?
 let updatesData;
 try {
   updatesData = await fetch(updatesUrl).then((res) => res.json());
+  console.log(`JSON received from the server: ${JSON.stringify(updatesData)}`)
 } catch (error) {
   console.log(`Failed to get data from MGP site: ${error}`);
   console.log(
