@@ -1,7 +1,7 @@
 lockfileVersion: '6.0'
 
 settings:
-  autoInstallPeers: true
+  autoInstallPeers: false
   excludeLinksFromLockfile: false
 
 dependencies:
@@ -27,7 +27,7 @@ dependencies:
 devDependencies:
   '@fullhuman/postcss-purgecss':
     specifier: ^5.0.0
-    version: 5.0.0(postcss@8.4.35)
+    version: 5.0.0
   '@types/node':
     specifier: ^18.19.17
     version: 18.19.17
@@ -539,12 +539,11 @@ packages:
     dev: false
     optional: true
 
-  /@fullhuman/postcss-purgecss@5.0.0(postcss@8.4.35):
+  /@fullhuman/postcss-purgecss@5.0.0:
     resolution: {integrity: sha512-onDS/b/2pMRzqSoj4qOs2tYFmOpaspjTAgvACIHMPiicu1ptajiBruTrjBzTKdxWdX0ldaBb7wj8nEaTLyFkJw==}
     peerDependencies:
       postcss: ^8.0.0
     dependencies:
-      postcss: 8.4.35
       purgecss: 5.0.0
     dev: true
 
@@ -2487,6 +2486,7 @@ packages:
     resolution: {integrity: sha512-eSRppjcPIatRIMC1U6UngP8XFcz8MQWGQdt1MTBQ7NaAmvXDfvNxbvWV3x2y6CdEUciCSsDHDQZbhYaB8QEo2g==}
     engines: {node: ^10 || ^12 || ^13.7 || ^14 || >=15.0.1}
     hasBin: true
+    dev: false
 
   /napi-build-utils@1.0.2:
     resolution: {integrity: sha512-ONmRUqK7zj7DWX0D9ADe03wbwOBZxNAfF20PlGfCWQcD3+/MakShIHrMqx9YwPTfxDdF1zLeL+RGZiR9kGMLdg==}
@@ -2697,6 +2697,7 @@ packages:
       nanoid: 3.3.7
       picocolors: 1.0.0
       source-map-js: 1.0.2
+    dev: false
 
   /prebuild-install@7.1.1:
     resolution: {integrity: sha512-jAXscXWMcCK8GgCoHOfIr0ODh5ai8mj63L2nWrjuAgXE6tDyYGnx4/8o/rCgU+B4JSyZBKbeZqzhtwtC3ovxjw==}
