@@ -1,9 +1,10 @@
 import "zx/globals";
 
 const sqlite3 = require("sqlite3").verbose();
+const randomSuffix = Math.random().toString(36).slice(2);
 
 const updateCaseType = async (db) => {
-  return fetch("https://migracje.gov.pl/wp-json/udscmap/v1/caseType")
+  return fetch(`https://migracje.gov.pl/wp-json/udscmap/v1/caseType?orderBy=${randomSuffix}&limit=-1`)
     .then((resp) => resp.json())
     .then((data) => {
       let query = `DELETE FROM caseType`;
@@ -39,7 +40,7 @@ const updateCaseType = async (db) => {
 };
 
 const updateCountry = async (db) => {
-  return fetch("https://migracje.gov.pl/wp-json/udscmap/v1/country")
+  return fetch(`https://migracje.gov.pl/wp-json/udscmap/v1/country?orderBy=${randomSuffix}&limit=-1`)
     .then((resp) => resp.json())
     .then((data) => {
       let query = `DELETE FROM country`;
@@ -77,7 +78,7 @@ const updateCountry = async (db) => {
 };
 
 const updateDecisionMarker = async (db) => {
-  return fetch("https://migracje.gov.pl/wp-json/udscmap/v1/decisionMarker")
+  return fetch(`https://migracje.gov.pl/wp-json/udscmap/v1/decisionMarker?orderBy=${randomSuffix}&limit=-1`)
     .then((resp) => resp.json())
     .then((data) => {
       let query = `DELETE FROM decisionMarker`;
@@ -113,7 +114,7 @@ const updateDecisionMarker = async (db) => {
 };
 
 const updateInstitution = async (db) => {
-  return fetch("https://migracje.gov.pl/wp-json/udscmap/v1/institution")
+  return fetch(`https://migracje.gov.pl/wp-json/udscmap/v1/institution?orderBy=${randomSuffix}&limit=-1`)
     .then((resp) => resp.json())
     .then((data) => {
       let query = `DELETE FROM institution`;
@@ -149,7 +150,7 @@ const updateInstitution = async (db) => {
 };
 
 const updateStatuslist = async (db) => {
-  return fetch("https://migracje.gov.pl/wp-json/udscmap/v1/status")
+  return fetch(`https://migracje.gov.pl/wp-json/udscmap/v1/status?orderBy=${randomSuffix}&limit=-1`)
     .then((resp) => resp.json())
     .then((data) => {
       let query = `DELETE FROM statuslist`;
