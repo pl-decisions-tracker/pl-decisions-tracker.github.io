@@ -195,6 +195,7 @@ const finalObject = data.reduce((acc, curr) => {
   helper[currentCaseType].institutions[currentInstitution][
     currentDecisionMarker
   ].total[dataIndex] = curr.count;
+  // we can't use this for institution levels, as first data could appear much later then initial data point for this institution
   if (curr.updateObj.dataUpdated === 2) {
     if (
       !acc[currentCaseType].chartData.labels.includes(
@@ -244,6 +245,9 @@ const finalObject = data.reduce((acc, curr) => {
       currentInstDataset.data[dataAlignedIndex] =
         curr.count - (isNaN(prevInstSum) ? 0 : prevInstSum);
     }
+  }
+  if(currentInstitution === 'Wojewoda Wielkopolski' && currentCaseType === 'Pobyt rezydenta długoterminowego UE' && currentDecisionMarker === 'Pozytywna'){
+    console.log(curr.dateId,curr.country, curr.count)
   }
   return acc;
 }, {} as YearOverviewType);
