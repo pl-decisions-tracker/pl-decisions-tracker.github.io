@@ -330,9 +330,9 @@ dateId = await new Promise((resolve, reject) => {
 // FROM CTE_Source
 // WHERE PriorValue IS NULL OR PriorValue <> decisionsTotal
 
-const decisionsDataUrl = `https://migracje.gov.pl/wp-json/udscmap/v1/decisions/poland?groupBy=institution%2Ccountry%2CcaseType%2CdecisionMarker&fields=institution%2Ccountry%2CcaseType%2CdecisionMarker%2Ctotal&orderBy=total%2C${randomSuffix}&year=${currentYear}`;
-const statusesDataUrl = `https://migracje.gov.pl/wp-json/udscmap/v1/statuses/poland?groupBy=institution%2Cstatus%2Ccountry&fields=institution%2Cstatus%2Ccountry%2Ctotal&orderBy=status%2C${randomSuffix}&year=${currentYear}`;
-const applicationsDataUrl = `https://migracje.gov.pl/wp-json/udscmap/v1/applications/poland?groupBy=institution%2Ccountry%2CcaseType&fields=institution%2Ccountry%2CcaseType%2Ctotal&orderBy=caseType%2C${randomSuffix}&year=${currentYear}`;
+const decisionsDataUrl = `https://migracje.gov.pl/wp-json/udscmap/v1/decisions/poland?groupBy=institution%2Ccountry%2CcaseType%2CdecisionMarker&fields=institution%2Ccountry%2CcaseType%2CdecisionMarker%2Ctotal&orderBy=total%2C${randomSuffix}&year=${currentYear}&limit=-1`;
+const statusesDataUrl = `https://migracje.gov.pl/wp-json/udscmap/v1/statuses/poland?groupBy=institution%2Cstatus%2Ccountry&fields=institution%2Cstatus%2Ccountry%2Ctotal&orderBy=status%2C${randomSuffix}&year=${currentYear}&limit=-1`;
+const applicationsDataUrl = `https://migracje.gov.pl/wp-json/udscmap/v1/applications/poland?groupBy=institution%2Ccountry%2CcaseType&fields=institution%2Ccountry%2CcaseType%2Ctotal&orderBy=caseType%2C${randomSuffix}&year=${currentYear}&limit=-1`;
 
 const [decisionsData, statusesData, applicationsData] = await Promise.all([
   fetch(decisionsDataUrl).then((res) => res.json()),
