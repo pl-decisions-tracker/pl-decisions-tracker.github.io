@@ -52,12 +52,12 @@ jobs:
       failure_message: ${{ steps.updater.outputs.failure_message }}
       failure_data: ${{ steps.updater.outputs.failure_data }}
     steps:
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v4
 
     - name: Install Node.js
-      uses: actions/setup-node@v3
+      uses: actions/setup-node@v4
       with:
-        node-version: 18
+        node-version: 20
 
     - uses: pnpm/action-setup@v4
       name: Install pnpm
@@ -72,7 +72,7 @@ jobs:
       run: |
         echo "STORE_PATH=$(pnpm store path)" >> $GITHUB_OUTPUT
 
-    - uses: actions/cache@v3
+    - uses: actions/cache@v4
       name: Setup pnpm cache
       with:
         path: ${{ steps.pnpm-cache.outputs.STORE_PATH }}
@@ -104,11 +104,11 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout your repository using git
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           ref: 'main'
       - name: Install, build, and upload your site
-        uses: withastro/action@v0
+        uses: withastro/action@v2
         with:
           path: ./astro-pl-tracker # The root location of your Astro project inside the repository. (optional)
           # node-version: 16 # The specific version of Node that should be used to build your site. Defaults to 16. (optional)
@@ -125,7 +125,7 @@ jobs:
     steps:
       - name: Deploy to GitHub Pages
         id: deployment
-        uses: actions/deploy-pages@v1
+        uses: actions/deploy-pages@v4
       - name: Check updater status
         env:
           UPDATE_FAILED: ${{needs.sqliteupdate.outputs.update_failed}}
