@@ -112,7 +112,7 @@ jobs:
         with:
           path: ./astro-pl-tracker
           # node-version: 16 # The specific version of Node that should be used to build your site. Defaults to 16. (optional)
-          package-manager: pnpm
+          package-manager: pnpm@latest
 
   deploy:
     needs:
