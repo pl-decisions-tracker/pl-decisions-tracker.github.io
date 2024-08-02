@@ -27,7 +27,7 @@ jobs:
         uses: withastro/action@v2.0.0
         with:
             path: ./astro-pl-tracker
-            package-manager: pnpm
+            package-manager: pnpm@latest
 
   deploy:
     needs: build
