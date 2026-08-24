@@ -63,7 +63,7 @@ jobs:
       name: Install pnpm
       id: pnpm-install
       with:
-        version: latest
+        version: 11
         run_install: false
 
     - name: Get pnpm store directory
