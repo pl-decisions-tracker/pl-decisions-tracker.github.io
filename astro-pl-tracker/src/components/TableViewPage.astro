@@ -1,6 +1,6 @@
 ---
 import { readFileSync } from "node:fs";
-import AgGridTable from "./AgGridTable.astro";
+import TabulatorTable from "./TabulatorTable.astro";
 import { TABLE_CONFIGS } from "../utils/tableConfigs";
 
 type Props = {
@@ -43,4 +43,4 @@ const columns = [
   <h5 class="text-center py-2">Нет данных за выбранный год</h5>
 )}
 
-<AgGridTable dataUrl={dataUrl} columns={columns} />
+<TabulatorTable dataUrl={dataUrl} columns={columns} />

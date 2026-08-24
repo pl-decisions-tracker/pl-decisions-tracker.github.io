@@ -8,7 +8,7 @@ module.exports = {
           safelist: {
             standard: [],
             deep: [/class$/],
-            greedy: [],
+            greedy: [/^\.?tabulator/],
             keyframes: [],
             variables: [],
           },

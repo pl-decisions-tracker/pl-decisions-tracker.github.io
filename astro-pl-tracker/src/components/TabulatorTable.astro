@@ -1,0 +1,184 @@
+---
+export interface TabulatorColumnDto {
+  field: string;
+  headerName: string;
+}
+
+type Props = {
+  /** Absolute URL of the per-year JSON dataset */
+  dataUrl: string;
+  /** Hierarchy columns, top group level first; the last one is the leaf */
+  columns: TabulatorColumnDto[];
+};
+
+const { dataUrl, columns } = Astro.props;
+---
+
+<div class="tab-host" data-data-url={dataUrl} data-columns={JSON.stringify(columns)}>
+  <form id="tbFilters" class="d-flex flex-wrap gap-2 pb-2" onsubmit="return false"></form>
+  <div id="tabTable"></div>
+</div>
+
+<style>
+  .tab-host :global(#tabTable) {
+    height: 70vh;
+    width: 100%;
+    background: #fff;
+  }
+  .tab-host :global(#tbFilters .form-select) {
+    max-width: 340px;
+  }
+  .tab-host :global(#tbFilters .form-control) {
+    max-width: 220px;
+  }
+</style>
+
+<script>
+  import { TabulatorFull as Tabulator } from "tabulator-tables";
+  import "tabulator-tables/dist/css/tabulator.min.css";
+
+  const host = document.querySelector<HTMLElement>(".tab-host")!;
+  const tableEl = host.querySelector<HTMLElement>("#tabTable")!;
+  const filterForm = host.querySelector<HTMLFormElement>("#tbFilters")!;
+  const dataUrl = host.dataset.dataUrl!;
+  const columns: { field: string; headerName: string }[] = JSON.parse(
+    host.dataset.columns!
+  );
+
+  const numberFmt = new Intl.NumberFormat("ru-RU");
+  const sumOf = (rows: Array<{ count?: number }>) =>
+    rows.reduce((acc, r) => acc + Number(r.count ?? 0), 0);
+
+  const table = new Tabulator(tableEl, {
+    layout: "fitColumns",
+    height: "70vh",
+    groupBy: columns.map((c) => c.field),
+    groupStartOpen: false,
+    groupHeader: (
+      value: unknown,
+      _count: number,
+      data: Array<{ count?: number }>
+    ) => `${String(value)} — Σ ${numberFmt.format(sumOf(data))}`,
+    columns: [
+      ...columns.map((c, idx) =>
+        idx === 0
+          ? { title: c.headerName, field: c.field, width: 120 }
+          : { title: c.headerName, field: c.field, minWidth: 200 }
+      ),
+      {
+        title: "Количество",
+        field: "count",
+        hozAlign: "right",
+        width: 150,
+        sorter: "number",
+      },
+    ],
+  });
+
+  const tableReady = new Promise<void>((resolve) =>
+    table.on("tableBuilt", () => resolve())
+  );
+
+  const dateInput = document.createElement("input");
+  dateInput.type = "search";
+  dateInput.className = "form-control";
+  dateInput.placeholder = "Дата содержит…";
+  filterForm.appendChild(dateInput);
+
+  const selects: HTMLSelectElement[] = [];
+  for (const c of columns.slice(1)) {
+    const sel = document.createElement("select");
+    sel.className = "form-select";
+    sel.dataset.field = c.field;
+    filterForm.appendChild(sel);
+    selects.push(sel);
+  }
+
+  const resetBtn = document.createElement("button");
+  resetBtn.type = "button";
+  resetBtn.className = "btn btn-outline-secondary";
+  resetBtn.textContent = "Сбросить фильтры";
+  filterForm.appendChild(resetBtn);
+
+  async function applyFilters() {
+    await tableReady;
+    const filters: Array<{ field: string; type: string; value: string }> = [];
+    const dateVal = dateInput.value.trim();
+    if (dateVal) {
+      filters.push({ field: "date", type: "like", value: dateVal });
+    }
+    for (const sel of selects) {
+      if (sel.value) {
+        filters.push({ field: sel.dataset.field!, type: "=", value: sel.value });
+      }
+    }
+    table.clearFilter();
+    for (const f of filters) {
+      table.addFilter(f.field, f.type, f.value);
+    }
+  }
+
+  let debounceTimer: ReturnType<typeof setTimeout>;
+  dateInput.addEventListener("input", () => {
+    clearTimeout(debounceTimer);
+    debounceTimer = setTimeout(applyFilters, 300);
+  });
+  for (const sel of selects) {
+    sel.addEventListener("change", applyFilters);
+  }
+  resetBtn.addEventListener("click", () => {
+    dateInput.value = "";
+    for (const sel of selects) sel.value = "";
+    applyFilters();
+  });
+
+  function fillSelects(rows: Record<string, unknown>[]) {
+    const values = new Map<string, Set<string>>();
+    for (const c of columns.slice(1)) {
+      values.set(c.field, new Set());
+    }
+    for (const r of rows) {
+      for (const c of columns.slice(1)) {
+        values.get(c.field)!.add(String(r[c.field]));
+      }
+    }
+    for (const sel of selects) {
+      const meta = columns.find((c) => c.field === sel.dataset.field)!;
+      sel.innerHTML = "";
+      const empty = document.createElement("option");
+      empty.value = "";
+      empty.textContent = meta.headerName + ": все";
+      sel.appendChild(empty);
+      const sorted = [...values.get(sel.dataset.field!)!].sort((a, b) =>
+        a.localeCompare(b, "ru")
+      );
+      for (const v of sorted) {
+        const opt = document.createElement("option");
+        opt.value = v;
+        opt.textContent = v;
+        sel.appendChild(opt);
+      }
+    }
+  }
+
+  function dimFields() {
+    return columns.slice(1).map((c) => c.field);
+  }
+
+  fetch(dataUrl)
+    .then((res) => {
+      if (!res.ok) throw new Error("HTTP " + res.status);
+      return res.json();
+    })
+    .then(async (data) => {
+      fillSelects(data.rows);
+      await tableReady;
+      await table.setData(data.rows);
+    })
+    .catch(() => {
+      const div = document.createElement("div");
+      div.className = "alert alert-danger m-2";
+      div.textContent = "Не удалось загрузить данные таблицы.";
+      host.prepend(div);
+    });
+</script>
