@@ -33,7 +33,16 @@ const { dataUrl, columns } = Astro.props;
 </style>
 
 <script>
-  import { createGrid, themeQuartz } from "ag-grid-community";
+  import {
+    createGrid,
+    themeQuartz,
+    ModuleRegistry,
+    AllCommunityModule,
+  } from "ag-grid-community";
+
+  // AG Grid v33+ ships as modules: register the full Community bundle
+  // (row grouping, aggregation, locale, filters) before any grid is created.
+  ModuleRegistry.registerModules([AllCommunityModule]);
 
   const container = document.getElementById("agGrid");
   const filterForm = document.getElementById("agFilters");
