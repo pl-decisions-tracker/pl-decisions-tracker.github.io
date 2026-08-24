@@ -10,45 +10,29 @@ type Props = {
 };
 
 const { year, countryParam } = Astro.props;
-const data = await prisma.decisions.findMany({
-  where: {
-    updateObj: {
-      timestamp: {
-        lt: new Date(`${year + 1}-01-01`),
-        gte: new Date(`${year}-01-01`),
-      },
-      dataUpdated: {
-        gt: 0,
-      },
-    },
-    countryObj:
-      countryParam.toUpperCase() === "ALL"
-        ? {}
-        : {
-            code: countryParam.toUpperCase(),
-          },
-  },
-  include: {
-    updateObj: true,
-    institutionObj: true,
-    caseTypeObj: true,
-    decisionMarkerObj: true,
-  },
-  orderBy: [
-    {
-      updateObj: {
-        timestamp: "asc",
-      },
-    },
-    {
-      caseType: "asc",
-    },
-    {
-      decisionMarker: "asc",
-    },
-  ],
-});
+const startMs = Date.UTC(year, 0, 1);
+const endMs = Date.UTC(year + 1, 0, 1);
+let sql = "SELECT u.timestamp AS ts, u.dataUpdated AS du, ct.type AS caseType, dm.description AS marker, i.name AS institution, SUM(d.count) AS total " +
+  "FROM decisions d JOIN updates u ON u.dateId = d.dateId " +
+  "JOIN caseType ct ON ct.id = d.caseType JOIN decisionMarker dm ON dm.id = d.decisionMarker " +
+  "JOIN institution i ON i.id = d.institution LEFT JOIN country c ON c.id = d.country " +
+  "WHERE u.timestamp >= ? AND u.timestamp < ? AND u.dataUpdated > 0";
+const params = [startMs, endMs];
+if (countryParam.toUpperCase() !== "ALL") {
+  sql += " AND c.code = ?";
+  params.push(countryParam.toUpperCase());
+}
+sql += " GROUP BY d.dateId, d.caseType, d.decisionMarker, d.institution ORDER BY u.timestamp ASC, ct.type ASC, dm.description ASC, i.name ASC";
+const rawRows = await prisma.$queryRawUnsafe(sql, ...params);
 await prisma.$disconnect();
+const data = rawRows.map((r) => ({
+  count: Number(r.total),
+  updateObj: { timestamp: new Date(Number(r.ts)), dataUpdated: Number(r.du) },
+  caseTypeObj: { type: r.caseType },
+  decisionMarkerObj: { description: r.marker },
+  institutionObj: { name: r.institution },
+}));
+
 
 const decisionMarkerColors: Record<string, [number, number, number]> = {
   Inna: [0, 0, 0],
@@ -99,6 +83,8 @@ const finalObject = data.reduce((acc, curr) => {
   const currentCaseType = curr.caseTypeObj.type;
   const currentDecisionMarker = curr.decisionMarkerObj.description;
   const currentInstitution = curr.institutionObj.name;
+  const markerColors =
+    decisionMarkerColors[curr.decisionMarkerObj.description] ?? [0, 0, 0];
   if (!acc.hasOwnProperty(currentCaseType)) {
     acc[currentCaseType] = {
       chartData: { labels: [], datasets: [] },
@@ -114,10 +100,10 @@ const finalObject = data.reduce((acc, curr) => {
     acc[currentCaseType].chartData.datasets.push({
       label: currentDecisionMarker,
       data: [],
-      borderColor: `rgb(${decisionMarkerColors[currentDecisionMarker].join(
+      borderColor: `rgb(${markerColors.join(
         ","
       )})`,
-      backgroundColor: `rgba(${decisionMarkerColors[currentDecisionMarker].join(
+      backgroundColor: `rgba(${markerColors.join(
         ","
       )}, 0.5)`,
     });
@@ -152,10 +138,10 @@ const finalObject = data.reduce((acc, curr) => {
     ].chartData.datasets.push({
       label: currentDecisionMarker,
       data: [],
-      borderColor: `rgb(${decisionMarkerColors[currentDecisionMarker].join(
+      borderColor: `rgb(${markerColors.join(
         ","
       )})`,
-      backgroundColor: `rgba(${decisionMarkerColors[currentDecisionMarker].join(
+      backgroundColor: `rgba(${markerColors.join(
         ","
       )}, 0.5)`,
     });

@@ -1,0 +1,24 @@
+---
+import MainLayout from '../../../layouts/MainLayout.astro';
+import TableViewPage from '../../../components/TableViewPage.astro';
+import { getCountryRoutes } from '../../../utils/contryRoutes';
+import { readFileSync } from 'node:fs';
+
+export async function getStaticPaths() {
+  const manifest = JSON.parse(
+    readFileSync('public/data/index.json', 'utf-8')
+  );
+  return getCountryRoutes().flatMap((c) => {
+    const years: number[] = manifest['applicationstotal']?.[c.params.country] ?? [];
+    return years.map((y) => ({
+      params: { country: c.params.country, year: y.toString() },
+    }));
+  });
+}
+
+const { country, year } = Astro.params;
+---
+
+<MainLayout>
+  <TableViewPage countryParam={country!} year={parseInt(year!)} tableKey="applicationstotal" />
+</MainLayout>

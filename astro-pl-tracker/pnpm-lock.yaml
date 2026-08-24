@@ -20,6 +20,9 @@ importers:
       '@types/chart.js':
         specifier: ^2.9.41
         version: 2.9.41
+      ag-grid-community:
+        specifier: ^36.1.0
+        version: 36.1.0
       astro:
         specifier: ^4.4.0
         version: 4.4.0(@types/node@18.19.17)(sass@1.71.0)(typescript@5.3.3)
@@ -39,9 +42,6 @@ importers:
       sass:
         specifier: ^1.71.0
         version: 1.71.0
-      string-pixel-width:
-        specifier: ^1.11.0
-        version: 1.11.0
       typescript:
         specifier: ^5.3.3
         version: 5.3.3
@@ -506,6 +506,15 @@ packages:
     resolution: {integrity: sha512-Y9rRfJG5jcKOE0CLisYbojUjIrIEE7AGMzA/Sm4BslANhbS+cDMpgBdcPT91oJ7OuJ9hYJBx59RjbhxVnrF8Xg==}
     engines: {node: '>=0.4.0'}
     hasBin: true
+
+  ag-charts-types@14.1.0:
+    resolution: {integrity: sha512-mmzkng88c0l+Z9PvCMowMilhVeNgDU/iMuMemcOQD4BG/qO4vbkxWvyQO0iqju8Dx7YOY81PNzC/RmElQNiVkA==}
+
+  ag-grid-community@36.1.0:
+    resolution: {integrity: sha512-WnvSQ4csRs8gv/b1B0lPHykQXvUJVgi2u5mpY0Aa6dv3pvhDVVqCT8dwUyOeCog4JNPptaXGrOrZ8qP2XoJzVA==}
+
+  ag-stack@36.1.0:
+    resolution: {integrity: sha512-Kmkf5iRZmyduNx2KtW450j6GbCdJ4ejacSpb1AWl0yrdquRmScLRc1SlLolx6lyCbTBSJGo4tRraKbBzre+GlQ==}
 
   ansi-align@3.0.1:
     resolution: {integrity: sha512-IOfwwBF5iczOjp/WeY4YxyjqAFMQoZufdQWDd19SEExbVLNXqvpzSJ/M7Za4/sCPmQ0+GRquoA7bGcINcxew6w==}
@@ -1094,9 +1103,6 @@ packages:
     resolution: {integrity: sha512-iPZK6eYjbxRu3uB4/WZ3EsEIMJFMqAoopl3R+zuq0UjcAm/MO6KCweDgPfP3elTztoKP3KtnVHxTn2NHBSDVUw==}
     engines: {node: '>=10'}
 
-  lodash.deburr@4.1.0:
-    resolution: {integrity: sha512-m/M1U1f3ddMCs6Hq2tAsYThTBDaAKFDX3dwDo97GEYzamXi9SqUpjWi/Rrj/gf3X2n8ktwgZrlP1z6E3v/IExQ==}
-
   log-symbols@5.1.0:
     resolution: {integrity: sha512-l0x2DvrW294C9uDCoQe1VSU4gf529FkSZ6leBl4TiqZH/e+0R7hSfHQBNut2mNygDgHwvYHfFLn6Oxb3VWj2rA==}
     engines: {node: '>=12'}
@@ -1604,9 +1610,6 @@ packages:
 
   streamx@2.16.1:
     resolution: {integrity: sha512-m9QYj6WygWyWa3H1YY69amr4nVgy61xfjys7xO7kviL5rfIEc2naf+ewFiOA+aEJD7y0JO3h2GoiUv4TDwEGzQ==}
-
-  string-pixel-width@1.11.0:
-    resolution: {integrity: sha512-GeKuNcCza7Gf3tlMJiZY8SF1LtbFGeMUEpHifncgJn+ZcUpnoPyE69HEyb0rXrJ3bejY/M/kBylu7IDlPJD9Ng==}
 
   string-width@4.2.3:
     resolution: {integrity: sha512-wKyQRQpjJ0sIp62ErSZdGsjMJWsap5oRNihHhu6G7JVO/9jIB6UyevL+tXuOqrng8j/cxKTWyWUwvSTriiZz/g==}
@@ -2303,6 +2306,15 @@ snapshots:
 
   acorn@8.11.3: {}
 
+  ag-charts-types@14.1.0: {}
+
+  ag-grid-community@36.1.0:
+    dependencies:
+      ag-charts-types: 14.1.0
+      ag-stack: 36.1.0
+
+  ag-stack@36.1.0: {}
+
   ansi-align@3.0.1:
     dependencies:
       string-width: 4.2.3
@@ -2983,8 +2995,6 @@ snapshots:
   locate-path@6.0.0:
     dependencies:
       p-locate: 5.0.0
-
-  lodash.deburr@4.1.0: {}
 
   log-symbols@5.1.0:
     dependencies:
@@ -3758,10 +3768,6 @@ snapshots:
     optionalDependencies:
       bare-events: 2.2.0
     optional: true
-
-  string-pixel-width@1.11.0:
-    dependencies:
-      lodash.deburr: 4.1.0
 
   string-width@4.2.3:
     dependencies:

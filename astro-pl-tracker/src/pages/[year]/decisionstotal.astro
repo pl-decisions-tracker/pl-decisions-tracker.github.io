@@ -1,0 +1,19 @@
+---
+import MainLayout from '../../layouts/MainLayout.astro';
+import TableViewPage from '../../components/TableViewPage.astro';
+import { readFileSync } from 'node:fs';
+
+export async function getStaticPaths() {
+  const manifest = JSON.parse(
+    readFileSync('public/data/index.json', 'utf-8')
+  );
+  const years: number[] = manifest['decisionstotal']?.ru ?? [];
+  return years.map((y) => ({ params: { year: y.toString() } }));
+}
+
+const { year } = Astro.params;
+---
+
+<MainLayout>
+  <TableViewPage countryParam="ru" year={parseInt(year!)} tableKey="decisionstotal" />
+</MainLayout>

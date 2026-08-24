@@ -1,0 +1,202 @@
+---
+export interface AgGridColumnDto {
+  field: string;
+  headerName: string;
+}
+
+type Props = {
+  /** Absolute URL of the per-year JSON dataset */
+  dataUrl: string;
+  /** Hierarchy columns, top group level first; the last one is the leaf */
+  columns: AgGridColumnDto[];
+};
+
+const { dataUrl, columns } = Astro.props;
+---
+
+<div class="ag-table" data-data-url={dataUrl} data-columns={JSON.stringify(columns)}>
+  <form id="agFilters" class="d-flex flex-wrap gap-2 pb-2" onsubmit="return false"></form>
+  <div id="agGrid" class="ag-theme-quartz"></div>
+</div>
+
+<style>
+  .ag-table :global(#agGrid) {
+    height: 70vh;
+    width: 100%;
+  }
+  .ag-table :global(#agFilters .form-select) {
+    max-width: 340px;
+  }
+  .ag-table :global(#agFilters .form-control) {
+    max-width: 220px;
+  }
+</style>
+
+<script>
+  import { createGrid, themeQuartz } from "ag-grid-community";
+
+  const container = document.getElementById("agGrid");
+  const filterForm = document.getElementById("agFilters");
+  const host = container.closest(".ag-table");
+  const dataUrl = host.dataset.dataUrl;
+  const columns = JSON.parse(host.dataset.columns);
+  const dimFields = columns.map((c) => c.field);
+  const numberFmt = new Intl.NumberFormat("ru-RU");
+
+  const ruLocale = {
+    noRowsToShow: "Нет строк для отображения",
+    loadingOoo: "Загрузка…",
+    loadingError: "Не удалось загрузить данные",
+    searchOoo: "Поиск…",
+    selectAll: "(Выбрать всё)",
+    blanks: "(Пусто)",
+    group: "Группа",
+    equals: "Равно",
+    notEqual: "Не равно",
+    contains: "Содержит",
+    notContains: "Не содержит",
+    startsWith: "Начинается с",
+    endsWith: "Заканчивается на",
+    filterOoo: "Фильтр…",
+    applyFilter: "Применить",
+    resetFilter: "Сбросить",
+    clearFilter: "Очистить",
+    cancelFilter: "Отмена",
+    andCondition: "И",
+    orCondition: "ИЛИ",
+    textFilter: "Текстовый фильтр",
+    numberFilter: "Числовой фильтр",
+    dateFilter: "Фильтр по дате",
+    setFilter: "Фильтр-список",
+    pinColumn: "Закрепить столбец",
+    autosizeThiscolumn: "Автоширина столбца",
+    autosizeAllColumns: "Автоширина всех столбцов",
+    resetColumns: "Сбросить столбцы",
+    copy: "Копировать",
+    copyWithHeaders: "Копировать с заголовками",
+  };
+
+  const theme = themeQuartz.withParams({
+    fontFamily: "inherit",
+    accentColor: "#0d6efd",
+  });
+
+  const columnDefs = columns.map((c) => ({
+    field: c.field,
+    headerName: c.headerName,
+    rowGroup: true,
+    hide: true,
+  }));
+  columnDefs.push({
+    headerName: "Количество",
+    field: "count",
+    aggFunc: "sum",
+    minWidth: 150,
+    valueFormatter: (p) => (p.value == null ? "" : numberFmt.format(p.value)),
+  });
+
+  const gridApi = createGrid(container, {
+    theme,
+    localeText: ruLocale,
+    loading: true,
+    columnDefs,
+    autoGroupColumnDef: {
+      pinned: "left",
+      minWidth: 360,
+      cellRendererParams: { suppressCount: true },
+    },
+    defaultColDef: { sortable: true, resizable: true },
+    groupDefaultExpanded: -1,
+    suppressDragLeaveHidesColumns: true,
+  });
+
+  const dateInput = document.createElement("input");
+  dateInput.type = "search";
+  dateInput.className = "form-control";
+  dateInput.placeholder = "Дата содержит…";
+  filterForm.appendChild(dateInput);
+
+  const selects = [];
+  for (const c of columns) {
+    const sel = document.createElement("select");
+    sel.className = "form-select";
+    sel.dataset.field = c.field;
+    filterForm.appendChild(sel);
+    selects.push(sel);
+  }
+  const resetBtn = document.createElement("button");
+  resetBtn.type = "button";
+  resetBtn.className = "btn btn-outline-secondary";
+  resetBtn.textContent = "Сбросить фильтры";
+  filterForm.appendChild(resetBtn);
+
+  async function applyFilters() {
+    const dateVal = dateInput.value.trim();
+    await gridApi.setColumnFilterModel(
+      "date",
+      dateVal ? { filterType: "text", type: "contains", filter: dateVal } : null
+    );
+    for (const sel of selects) {
+      const v = sel.value;
+      await gridApi.setColumnFilterModel(
+        sel.dataset.field,
+        v ? { filterType: "text", type: "equal", filter: v } : null
+      );
+    }
+    gridApi.onFilterChanged();
+  }
+
+  let debounceTimer;
+  dateInput.addEventListener("input", () => {
+    clearTimeout(debounceTimer);
+    debounceTimer = setTimeout(applyFilters, 300);
+  });
+  for (const sel of selects) {
+    sel.addEventListener("change", applyFilters);
+  }
+  resetBtn.addEventListener("click", () => {
+    dateInput.value = "";
+    for (const sel of selects) sel.value = "";
+    applyFilters();
+  });
+
+  function fillSelects(rows) {
+    const values = new Map(dimFields.map((f) => [f, new Set()]));
+    for (const r of rows) {
+      for (const f of dimFields) values.get(f).add(String(r[f]));
+    }
+    for (const sel of selects) {
+      const f = sel.dataset.field;
+      const meta = columns.find((c) => c.field === f);
+      sel.innerHTML = "";
+      const empty = document.createElement("option");
+      empty.value = "";
+      empty.textContent = meta.headerName + ": все";
+      sel.appendChild(empty);
+      const sorted = [...values.get(f)].sort((a, b) => a.localeCompare(b, "ru"));
+      for (const v of sorted) {
+        const opt = document.createElement("option");
+        opt.value = v;
+        opt.textContent = v;
+        sel.appendChild(opt);
+      }
+    }
+  }
+
+  fetch(dataUrl)
+    .then((res) => {
+      if (!res.ok) throw new Error("HTTP " + res.status);
+      return res.json();
+    })
+    .then((data) => {
+      fillSelects(data.rows);
+      gridApi.setGridOption("rowData", data.rows);
+    })
+    .catch(() => {
+      gridApi.setGridOption("loading", false);
+      const div = document.createElement("div");
+      div.className = "alert alert-danger m-2";
+      div.textContent = "Не удалось загрузить данные таблицы.";
+      host.prepend(div);
+    });
+</script>

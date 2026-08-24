@@ -72,7 +72,8 @@ if(!Array.isArray(pathMatch)){
   throw new Error(`Path ${Astro.url.pathname} does not match regexp (\/[^\/]*)$ to find current page`)
 }
 const currentPath = pathMatch[1];
-const currentPathAbsolute = links.filter((l)=>Array.isArray(l.href) ? l.href.includes(currentPath) : l.href === currentPath)[0].absolute
+const matchedLink = links.filter((l)=>Array.isArray(l.href) ? l.href.includes(currentPath) : l.href === currentPath)[0]
+const currentPathAbsolute = matchedLink ? matchedLink.absolute : false
 
 ---
 

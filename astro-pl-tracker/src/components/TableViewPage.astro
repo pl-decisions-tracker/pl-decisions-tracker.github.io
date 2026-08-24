@@ -1,0 +1,46 @@
+---
+import { readFileSync } from "node:fs";
+import AgGridTable from "./AgGridTable.astro";
+import { TABLE_CONFIGS } from "../utils/tableConfigs";
+
+type Props = {
+  /** Lowercase country directory segment: ru | all | by | ... */
+  countryParam: string;
+  year: number;
+  tableKey: string;
+};
+
+const { countryParam, year, tableKey } = Astro.props;
+const config = TABLE_CONFIGS[tableKey];
+if (!config) {
+  throw new Error("Unknown table config: " + tableKey);
+}
+
+const manifest = JSON.parse(
+  readFileSync("public/data/index.json", "utf-8")
+);
+const years: number[] = manifest[tableKey]?.[countryParam] ?? [];
+
+const dataUrl = "/data/" + countryParam + "/" + tableKey + "/" + year + ".json";
+const columns = [
+  { field: "date", headerName: "Дата" },
+  ...config.dims.map((d) => ({ field: d.field, headerName: d.title })),
+];
+---
+
+<strong>{config.description}</strong>
+
+{years.length > 0 ? (
+  <div class="d-flex justify-content-center flex-wrap py-2">
+    {years.map((y) => (
+      <div class="p-2">
+        {y === year ? <strong>{y}</strong> : <a href={"../" + y + "/" + tableKey + ".html"}>{y}</a>}
+        {y !== years[years.length - 1] && <span class="ps-2">|</span>}
+      </div>
+    ))}
+  </div>
+) : (
+  <h5 class="text-center py-2">Нет данных за выбранный год</h5>
+)}
+
+<AgGridTable dataUrl={dataUrl} columns={columns} />

@@ -334,18 +334,34 @@ const ensureStatuslistTable = (db) => {
 $.env.NODE_TLS_REJECT_UNAUTHORIZED = 0;
 const sqlLiteConnection = new sqlite3.Database("astro-pl-tracker/prisma/tracker.db");
 await Promise.all([
-  ensureCasetypeTable(sqlLiteConnection).then(
-    updateCaseType(sqlLiteConnection)
-  ),
-  ensureCountryTable(sqlLiteConnection).then(
-    updateCountry(sqlLiteConnection)),
-  ensureDecisionmarkerTable(sqlLiteConnection).then(
-    updateDecisionMarker(sqlLiteConnection)
-  ),
-  ensureInstitutionTable(sqlLiteConnection).then(
-    updateInstitution(sqlLiteConnection)
-  ),
-  ensureStatuslistTable(sqlLiteConnection).then(
-    updateStatuslist(sqlLiteConnection)
-  ),
+  ensureCasetypeTable(sqlLiteConnection).then(() => updateCaseType(sqlLiteConnection)),
+  ensureCountryTable(sqlLiteConnection).then(() => updateCountry(sqlLiteConnection)),
+  ensureDecisionmarkerTable(sqlLiteConnection).then(() => updateDecisionMarker(sqlLiteConnection)),
+  ensureInstitutionTable(sqlLiteConnection).then(() => updateInstitution(sqlLiteConnection)),
+  ensureStatuslistTable(sqlLiteConnection).then(() => updateStatuslist(sqlLiteConnection)),
 ]);
+
+// Backfill: restore dictionary ids that are still referenced by fact rows but
+// no longer returned by the API (retired entries). Without this, Prisma
+// include queries crash with Inconsistent query result.
+const QT = String.fromCharCode(39);
+const q = (s) => QT + s + QT;
+const backfill = (table, colName, sources, label) => {
+  const sel = table === "statuslist" ? "id, status" : table === "decisionMarker" ? "id, description" : table === "institution" ? "id, name" : "id, type";
+  const union = sources.map((s) => "SELECT " + colName + " AS ref FROM " + s).join(" UNION ");
+  const query = "INSERT INTO " + table + " (" + sel + ") " +
+    "SELECT DISTINCT f.ref, " + q(label + " #") + " || f.ref " +
+    "FROM (" + union + ") f LEFT JOIN " + table + " t ON t.id = f.ref " +
+    "WHERE f.ref IS NOT NULL AND t.id IS NULL";
+  return new Promise((resolve, reject) =>
+    sqlLiteConnection.run(query, (err) => (err ? reject(err) : resolve()))
+  );
+};
+await Promise.all([
+  backfill("caseType", "caseType", ["decisions", "applications"], "Архивный тип дела"),
+  backfill("institution", "institution", ["decisions", "applications", "statuses"], "Архивная институция"),
+  backfill("decisionMarker", "decisionMarker", ["decisions"], "Архивное решение"),
+  backfill("statuslist", "status", ["statuses"], "Архивный статус"),
+]);
+sqlLiteConnection.close();
+console.log("Dictionary backfill complete.");

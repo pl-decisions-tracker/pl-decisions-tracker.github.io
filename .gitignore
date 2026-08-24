@@ -19,3 +19,5 @@ pnpm-debug.log*
 
 # macOS-specific files
 .DS_Store
+# generated table datasets (rebuilt from tracker.db at build time)
+astro-pl-tracker/public/data/

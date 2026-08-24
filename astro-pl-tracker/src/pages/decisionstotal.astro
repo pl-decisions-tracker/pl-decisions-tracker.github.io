@@ -1,8 +1,24 @@
 ---
-import DecisionsTotalComponent from "../components/DecisionsTotalComponent.astro";
-import MainLayout from "../layouts/MainLayout.astro";
+import { readFileSync } from 'node:fs';
+
+const TABLE_KEY = 'decisionstotal';
+const manifest = JSON.parse(readFileSync('public/data/index.json', 'utf-8'));
+const years: number[] = manifest[TABLE_KEY]?.ru ?? [];
+const latest = years.length ? years[years.length - 1] : null;
+const target = latest === null ? '/' : latest + '/' + TABLE_KEY + '.html';
+const refresh = '0; url=' + target;
 ---
 
-<MainLayout>
-  <DecisionsTotalComponent countryParam="RU" />
-</MainLayout>
+<!DOCTYPE html>
+<html lang="ru">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="refresh" content={refresh} />
+    <title>Redirect...</title>
+  </head>
+  <body>
+    <p>Таблицы теперь разбиты по годам.
+      <a href={target}>Открыть таблицу{latest === null ? "" : " за " + latest + " год"}</a>.
+    </p>
+  </body>
+</html>
