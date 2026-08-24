@@ -28,6 +28,7 @@ jobs:
         with:
             path: ./astro-pl-tracker
             package-manager: pnpm@latest
+            node-version: 24
 
   deploy:
     needs: build

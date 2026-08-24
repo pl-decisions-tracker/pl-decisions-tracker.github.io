@@ -1,6 +1,9 @@
 {
   "name": "astro-pl-tracker",
   "type": "module",
+  "engines": {
+    "node": ">=24"
+  },
   "version": "0.0.1",
   "scripts": {
     "dev": "node scripts/generate-table-data.mjs && astro dev",

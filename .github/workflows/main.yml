@@ -57,7 +57,7 @@ jobs:
     - name: Install Node.js
       uses: actions/setup-node@v4
       with:
-        node-version: 20
+        node-version: 24
 
     - uses: pnpm/action-setup@v4
       name: Install pnpm
@@ -111,7 +111,7 @@ jobs:
         uses: withastro/action@v2.0.0
         with:
           path: ./astro-pl-tracker
-          # node-version: 16 # The specific version of Node that should be used to build your site. Defaults to 16. (optional)
+          node-version: 24
           package-manager: pnpm@latest
 
   deploy:
