@@ -5,7 +5,9 @@ name: UPDATE data files daily
 # Controls when the workflow will run
 on:
   schedule:
-  - cron: "0 21 * * *"
+  # 21:23 UTC to avoid the top-of-the-hour congestion on GitHub Actions;
+  # runs at :00 are frequently delayed or silently dropped.
+  - cron: "23 21 * * *"
   # Allows you to run this workflow manually from the Actions tab
   workflow_dispatch:
 
