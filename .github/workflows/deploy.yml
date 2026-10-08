@@ -23,12 +23,29 @@ jobs:
     steps:
       - name: Checkout your repository using git
         uses: actions/checkout@v4.1.1
-      - name: Install, build, and upload your site
-        uses: withastro/action@v2.0.0
+      - name: Download tracker.db from Releases
+        run: |-
+          curl -fsSL --retry 3 -H "Authorization: token ${{ github.token }}" -H "Accept: application/octet-stream" \
+            -o astro-pl-tracker/prisma/tracker.db \
+            "https://github.com/${GITHUB_REPOSITORY}/releases/download/db-latest/tracker.db"
+          ls -la astro-pl-tracker/prisma/tracker.db
+      - name: Install Node.js
+        uses: actions/setup-node@v4
         with:
-            path: ./astro-pl-tracker
-            package-manager: pnpm@11
-            node-version: 24
+          node-version: 24
+      - name: Install pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 11
+      - name: Install dependencies and build site
+        run: |-
+          pnpm install
+          pnpm run build
+        working-directory: ./astro-pl-tracker
+      - name: Upload Pages artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: astro-pl-tracker/dist
 
   deploy:
     needs: build

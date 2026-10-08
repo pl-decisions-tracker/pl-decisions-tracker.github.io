@@ -19,6 +19,13 @@ jobs:
     steps:
     - uses: actions/checkout@v4
 
+    - name: Download tracker.db from Releases
+      run: |-
+        curl -fsSL --retry 3 -H "Authorization: token ${{ github.token }}" -H "Accept: application/octet-stream" \
+          -o astro-pl-tracker/prisma/tracker.db \
+          "https://github.com/${GITHUB_REPOSITORY}/releases/download/db-latest/tracker.db"
+        ls -la astro-pl-tracker/prisma/tracker.db
+
     - name: Install Node.js
       uses: actions/setup-node@v4
       with:
@@ -50,6 +57,11 @@ jobs:
 
     - name: Run sql updater
       run: pnpm exec zx updater.mjs
+
+    - name: Upload updated tracker.db to Release
+      env:
+        GH_TOKEN: ${{ github.token }}
+      run: gh release upload db-latest astro-pl-tracker/prisma/tracker.db --clobber --repo "$GITHUB_REPOSITORY"
 
     - name: Commit and push changes
       run: |-
