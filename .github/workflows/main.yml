@@ -110,13 +110,17 @@ jobs:
 
     - name: Commit and push changes
       run: |-
-        git fetch origin
-        git pull origin main
-        git diff
+        # The db is no longer stored in git (single instance lives in the db-latest release).
+        # But GitHub auto-disables scheduled workflows after 60 days of repository inactivity
+        # (release asset updates do NOT count as activity), so each run pushes a tiny
+        # marker commit to keep the schedule alive.
         git config user.name "Automated"
-        git config user.email "---"
-        git diff --quiet || (git add -A && git commit -m "Updated with latest")
-        git push
+        git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+        git fetch origin
+        git pull --ff-only origin main
+        date -u +"%Y-%m-%dT%H:%M:%SZ" > data/last-update.txt
+        git add data/last-update.txt
+        git diff --cached --quiet || (git commit -m "chore: daily db update marker" && git push)
 
   build:
     needs: sqliteupdate
