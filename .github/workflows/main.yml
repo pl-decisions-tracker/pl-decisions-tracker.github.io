@@ -118,9 +118,12 @@ jobs:
         git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
         git fetch origin
         git pull --ff-only origin main
+        # `data/` does not exist in the repo, and shell redirection does not create
+        # parent directories - hence the explicit mkdir.
+        mkdir -p data
         date -u +"%Y-%m-%dT%H:%M:%SZ" > data/last-update.txt
         git add data/last-update.txt
-        git diff --cached --quiet || (git commit -m "chore: daily db update marker" && git push)
+        git diff --cached --quiet || (git commit -m "chore: daily db update marker" && git push origin HEAD:main)
 
   build:
     needs: sqliteupdate
